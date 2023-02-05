@@ -70,4 +70,7 @@ chmod 0755 /etc/init.d/*
 
 rm -rf /tmp/luci-*cache
 
+# 开启隐藏功能
+echo "0xDEADBEEF" >> /etc/config/google_fu_mode
+
 exit 0
