@@ -9,15 +9,19 @@ include $(INCLUDE_DIR)/kernel.mk
 PKG_NAME := MTK-WIFI-Open
 PKG_VERSION := 1.0
 PKG_RELEASE := 1
+PKG_LICENSE:=GPLv3
+PKG_LICENSE_FILES:=LICENSE
+
 PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)
 
 include $(INCLUDE_DIR)/package.mk
 
 # package的基本信息，根目录、子目录等
 define Package/$(PKG_NAME)
-  SECTION:=utils
-  CATEGORY:=Lemonade Packages
+  SECTION:=luci
+  CATEGORY:=LuCI
   SUBMENU:=MTK WIFI Open
+  PKGARCH:=all
   TITLE:=MTK-WIFI Automatic Open
   MAINTAINER:=Lemonade
 endef
