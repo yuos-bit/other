@@ -20,7 +20,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/$(PKG_NAME)
   SECTION:=luci
   CATEGORY:=LuCI
-  SUBMENU:=MTK WIFI Open
+  SUBMENU:=7. mtk-wifi-open
   PKGARCH:=all
   TITLE:=MTK-WIFI Automatic Open
   MAINTAINER:=Lemonade
