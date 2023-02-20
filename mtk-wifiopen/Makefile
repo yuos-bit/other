@@ -41,8 +41,9 @@ endef
 
 # 定义所有的安装路径、文件及其目标路径
 define Package/$(PKG_NAME)/install
-	$(INSTALL_DIR) $(1)/etc/init.d/
-	$(INSTALL_BIN) ./wifiopen $(1)/etc/init.d/
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_DIR) $(1)/usr/sbin
+	$(INSTALL_BIN) ./wifiopen $(1)/etc/init.d
 endef
 
 define Package/$(PKG_NAME)/preinst
