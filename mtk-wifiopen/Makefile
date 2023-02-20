@@ -41,10 +41,7 @@ endef
 
 # 定义所有的安装路径、文件及其目标路径
 define Package/$(PKG_NAME)/install
-	# $(INSTALL_DIR) $(1)/usr/sbin
-	# $(INSTALL_DIR) $(1)/etc/init.d
-	# $(INSTALL_DIR) $(1)/usr/share/wifiopen
-  $(INSTALL_BIN) ./files/wifiopen.sh $(1)/etc/init.d/
+     $(INSTALL_BIN) ./files/wifiopen.sh $(1)/etc/init.d/
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))
