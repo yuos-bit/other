@@ -41,44 +41,10 @@ endef
 
 # 定义所有的安装路径、文件及其目标路径
 define Package/$(PKG_NAME)/install
-	$(INSTALL_DIR) $(1)/etc/init.d/
-	$(INSTALL_BIN) ./wifiopen $(1)/etc/init.d/
+	$(INSTALL_DIR) $(1)/usr/sbin
+	$(INSTALL_DIR) $(1)/etc/init.d
+	$(INSTALL_DIR) $(1)/usr/share/wifiopen
+	$(INSTALL_BIN) ./files/wifiopen.sh $(1)/etc/init.d/wifiopen
 endef
 
-define Package/$(PKG_NAME)/preinst
-	#!/bin/bash
-	echo 'installing $(PKG_NAME)'
-endef
-
-# 安装时执行命令创建软连接
-define Package/$(PKG_NAME)/postinst
-	#!/bin/sh
-	# check if we are on real system
-	if [ -z "$${IPKG_INSTROOT}" ]; then
-		echo "Enabling rc.d symlink for $(PKG_NAME)"
-		/etc/init.d/wifiopen enable
-	fi
-
-	echo '$(PKG_NAME) installed successed !'
-	exit 0
-endef
-
-
-# 卸载时执行命令移除软连接
-define Package/$(PKG_NAME)/prerm
-	#!/bin/sh
-	# check if we are on real system
-	if [ -z "$${IPKG_INSTROOT}" ]; then
-		echo "Removing rc.d symlink for $(PKG_NAME)"
-		/etc/init.d/wifiopen disable
-	fi
-	echo 'removeing $(PKG_NAME)'
-	exit 0
-endef
-
-define Package/$(PKG_NAME)/postrm
-	#!/bin/bash
-	echo '$(PKG_NAME) remove successed !'
-endef
-
-$(eval $(call BuildPackage,$(PKG_NAME)))
+$(eval $(call BuildPackage,mtkiappd))
