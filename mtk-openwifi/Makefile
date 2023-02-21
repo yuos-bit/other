@@ -6,13 +6,14 @@
 include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/kernel.mk
 
-PKG_NAME:=luci-app-openwifi
-PKG_LICENSE:=GPLv3
-PKG_MAINTAINER:=Xiao Yu <mail@yuos.top>
-
+PKG_NAME:=mtk-openwifi
 LUCI_TITLE:=LuCI support for mt wifi open
 PKG_VERSION := 1.0
 PKG_RELEASE := 1
+PKG_LICENSE:=GPLv3
+PKG_LICENSE_FILES:=LICENSE
+PKG_MAINTAINER:=Xiao Yu <mail@yuos.top>
+
 PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)
 
 include $(INCLUDE_DIR)/package.mk
@@ -20,12 +21,10 @@ include $(INCLUDE_DIR)/package.mk
 define Package/$(PKG_NAME)
 	SECTION:=luci
 	CATEGORY:=LuCI
-	SUBMENU:=7. mtk-wifi-open
+	SUBMENU:=7. Mtk-wifi-open
 	PKGARCH:=all
 	TITLE:=MTK-WIFI Automatic Open
 	MAINTAINER:=Lemonade
-	PKGARCH:=all
-	URL:=https://yuos.top/
 endef
 
 define Package/$(PKG_NAME)/description
@@ -45,4 +44,4 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_DATA) ./files/firewall.include $(1)/usr/share/wifiopen/
 endef
 
-$(eval $(call BuildPackage,$(PKG_NAME))
+$(eval $(call BuildPackage,$(PKG_NAME)))
