@@ -18,13 +18,14 @@ PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)
 include $(INCLUDE_DIR)/package.mk
 
 define Package/$(PKG_NAME)
-	SECTION:=net
-	CATEGORY:=7.mtk wifiopen
-	SUBMENU:=Wireless
-	TITLE:=Lemonade's MTK-WIFI Automatic Open
-	DEPENDS:=
+	SECTION:=luci
+	CATEGORY:=LuCI
+	SUBMENU:=7. mtk-wifi-open
 	PKGARCH:=all
-	URL:=https://www.ddnsto.com/
+	TITLE:=MTK-WIFI Automatic Open
+	MAINTAINER:=Lemonade
+	PKGARCH:=all
+	URL:=https://yuos.top/
 endef
 
 define Package/$(PKG_NAME)/description
