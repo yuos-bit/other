@@ -8,7 +8,7 @@ include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME := mtkwifi-open
 PKG_VERSION := 1.0
-PKG_RELEASE := 2
+PKG_RELEASE := 1
 PKG_LICENSE:=GPLv3
 PKG_LICENSE_FILES:=LICENSE
 
@@ -17,11 +17,11 @@ PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)
 include $(INCLUDE_DIR)/package.mk
 
 define Package/$(PKG_NAME)
-	SECTION:=net
-	CATEGORY:=Network
-	TITLE:=MTK WIFI Automatic Open
-	DEPENDS:=@TARGET_ramips
-	SUBMENU:=Wireless
+  SECTION:=net
+  CATEGORY:=Network
+  SUBMENU:=Wireless
+  TITLE:=openwifi for MTK
+  DEPENDS:=@TARGET_ramips +libiwinfo
 endef
 
 define Package/$(PKG_NAME)/description
