@@ -40,8 +40,6 @@ define Package/$(PKG_NAME)/install
 
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/wifiopen $(1)/usr/sbin/
 	$(INSTALL_BIN) ./files/wifiopen.sh $(1)/etc/init.d/wifiopen
-	sed -i 's/WIRELESS_IOCTL_PARAM/$(WIRELESS_IOCTL_PARAM)/' $(1)/etc/init.d/wifiopen
-	$(INSTALL_DATA) ./files/firewall.include $(1)/usr/share/wifiopen/
 endef
 
 $(eval $(call BuildPackage,mtk-openwifi))
