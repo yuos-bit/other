@@ -30,18 +30,29 @@ define Package/$(PKG_NAME)/description
 	Lemonade's MTK-WIFI Automatic Open
 endef
 
-define Build/Prepare
-endef
-
-define Build/Configure
-endef
-
 define Build/Compile
 endef
 
 # 定义所有的安装路径、文件及其目标路径
 define Package/$(PKG_NAME)/install
-     $(INSTALL_BIN) ./files/wifiopen.sh $(1)/etc/init.d/
+	$(INSTALL_DIR) $(1)/etc/init.d/
+	$(INSTALL_DIR) $(1)/lib/wifi/
+	$(INSTALL_DIR) $(1)/etc/wireless/mt7615/
+	$(INSTALL_DIR) $(1)/etc_ro/Wireless/RT2860AP/
+	$(INSTALL_DIR) $(1)/lib/preinit/
+  ifeq ($(CONFIG_MTK_CHIP_MT7603E_MT7612E),y)
+	$(INSTALL_BIN) ./files/wifiopen.sh $(1)/etc/wireless/wifiopen.sh
+    else ifeq ($(CONFIG_MTK_CHIP_MT7603E_MT7615E),y)
+	  $(INSTALL_BIN) ./files/wifiopen.sh $(1)/etc/wireless/wifiopen.sh
+    else ifeq ($(CONFIG_MTK_CHIP_MT7615E_DBDC),y)
+	  $(INSTALL_BIN) ./files/wifiopen.sh $(1)/etc/wireless/wifiopen.sh
+    else ifeq ($(CONFIG_MTK_CHIP_MT7915E_DBDC),y)
+	  $(INSTALL_BIN) ./files/wifiopen.sh $(1)/etc/wireless/wifiopen.sh
+    else
+	  $(INSTALL_BIN) ./files/wifiopen.sh $(1)/etc/wireless/wifiopen.sh
+  endif
+	  $(INSTALL_BIN) ./files/wifiopen.sh $(1)/etc/init.d/
+	  $(INSTALL_BIN) ./files/wifiopen.sh $(1)/lib/preinit/
 endef
 
 $(eval $(call BuildPackage,$(PKG_NAME)))
