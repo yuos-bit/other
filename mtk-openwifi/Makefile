@@ -6,22 +6,25 @@
 include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/kernel.mk
 
-PKG_NAME := mtkwifi-open
+PKG_NAME:=luci-app-openwifi
+PKG_LICENSE:=GPLv3
+PKG_MAINTAINER:=Xiao Yu <mail@yuos.top>
+
+LUCI_TITLE:=LuCI support for mt wifi open
 PKG_VERSION := 1.0
 PKG_RELEASE := 1
-PKG_LICENSE:=GPLv3
-PKG_LICENSE_FILES:=LICENSE
-
 PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)
 
 include $(INCLUDE_DIR)/package.mk
 
 define Package/$(PKG_NAME)
-  SECTION:=net
-  CATEGORY:=Network
-  SUBMENU:=Wireless
-  TITLE:=openwifi for MTK
-  DEPENDS:=@TARGET_ramips +libiwinfo
+	SECTION:=net
+	CATEGORY:=7.mtk wifiopen
+	SUBMENU:=Wireless
+	TITLE:=Lemonade's MTK-WIFI Automatic Open
+	DEPENDS:=
+	PKGARCH:=all
+	URL:=https://www.ddnsto.com/
 endef
 
 define Package/$(PKG_NAME)/description
