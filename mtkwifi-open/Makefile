@@ -17,11 +17,11 @@ PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)
 include $(INCLUDE_DIR)/package.mk
 
 define Package/$(PKG_NAME)
-SECTION:=luci
-CATEGORY:=LuCI
-TITLE:=MTK-WIFI Automatic Open
-DEPENDS:=@TARGET_ramips
-SUBMENU:=7. mtkwifi-open
+	SECTION:=net
+	CATEGORY:=Network
+	TITLE:=MTK WIFI Automatic Open
+	DEPENDS:=@TARGET_ramips
+	SUBMENU:=Wireless
 endef
 
 define Package/$(PKG_NAME)/description
