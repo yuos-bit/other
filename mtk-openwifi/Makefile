@@ -44,4 +44,4 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_DATA) ./files/firewall.include $(1)/usr/share/wifiopen/
 endef
 
-$(eval $(call BuildPackage,$(PKG_NAME)))
+$(eval $(call BuildPackage,mtk-openwifi))
