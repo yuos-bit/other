@@ -51,13 +51,13 @@ wifi up
 echo -e '\n小渔学长 Build @ '$(date "+%Y.%m.%d")'\n'  >> package/base-files/files/etc/banner
 
 sed -i '/DISTRIB_REVISION/d' package/base-files/files/etc/openwrt_release
-echo "DISTRIB_REVISION='$(date "+%Y.%m.%d")'" >> package/base-files/files/etc/openwrt_release
+echo "DISTRIB_REVISION='$(date +"%Y.%m.%d-%H%M")'" >> package/base-files/files/etc/openwrt_release
 
 sed -i '/DISTRIB_DESCRIPTION/d' package/base-files/files/etc/openwrt_release
-echo "DISTRIB_REVISION='$(date "+%Y.%m.%d")'" >> package/base-files/files/etc/openwrt_release
+echo "DISTRIB_REVISION='$(date +"%Y.%m.%d-%H%M")'" >> package/base-files/files/etc/openwrt_release
 
 sed -i '/DISTRIB_DESCRIPTION/d' /etc/openwrt_release
-echo "DISTRIB_DESCRIPTION='OpenWrt @ 小渔学长 build $(date "+%Y.%m.%d")'" >> /etc/openwrt_release
+echo "DISTRIB_DESCRIPTION='OpenWrt @ 小渔学长 build $(date +"%Y.%m.%d-%H%M")'" >> /etc/openwrt_release
 
 
 # 删除状态页不需显示的
