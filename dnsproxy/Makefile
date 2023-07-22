@@ -5,54 +5,35 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=dnsproxy
-PKG_VERSION:=0.39.8
-PKG_RELEASE:=$(AUTORELESE)
+PKG_VERSION:=0.52.0
+PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/AdguardTeam/dnsproxy/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=99a6b0a1471507d6946ad9116218b6ea4054224f5d9d9faf901e77a500ba074e
+PKG_HASH:=e650ab9df52e33de1431690b84e700e88212dfc14684d0a88dd148f3cfc8336a
 
 PKG_MAINTAINER:=Tianling Shen <cnsztl@immortalwrt.org>
 PKG_LICENSE:=Apache-2.0
 PKG_LICENSE_FILES:=LICENSE
 
-PKG_CONFIG_DEPENDS:= \
-	CONFIG_DNSPROXY_COMPRESS_GOPROXY \
-	CONFIG_DNSPROXY_COMPRESS_UPX
-
 PKG_BUILD_DEPENDS:=golang/host
 PKG_BUILD_PARALLEL:=1
-PKG_USE_MIPS16:=0
+PKG_BUILD_FLAGS:=no-mips16
 
 GO_PKG:=github.com/AdguardTeam/dnsproxy
-GO_PKG_LDFLAGS:=-s -w
 GO_PKG_LDFLAGS_X:=main.VersionString=v$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk
-include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk
-
-define Package/dnsproxy/config
-config DNSPROXY_COMPRESS_GOPROXY
-	bool "Compiling with GOPROXY proxy"
-	default n
-
-config DNSPROXY_COMPRESS_UPX
-	bool "Compress executable files with UPX"
-	default y
-endef
-
-ifeq ($(CONFIG_DNSPROXY_COMPRESS_GOPROXY),y)
-	export GO111MODULE=on
-	export GOPROXY=https://goproxy.baidu.com
-endif
+include ../../lang/golang/golang-package.mk
 
 define Package/dnsproxy
   SECTION:=net
   CATEGORY:=Network
   SUBMENU:=IP Addresses and Names
   TITLE:=Simple DNS proxy with DoH, DoT, DoQ and DNSCrypt support
-  URL:=https://github.com/github.com/AdguardTeam/dnsproxy
+  URL:=https://github.com/AdguardTeam/dnsproxy
   DEPENDS:=$(GO_ARCH_DEPENDS) +ca-bundle
+  USERID:=dnsproxy=411:dnsproxy=411
 endef
 
 define Package/dnsproxy/description
@@ -61,11 +42,17 @@ define Package/dnsproxy/description
   work as a DNS-over-HTTPS, DNS-over-TLS or DNS-over-QUIC server.
 endef
 
-define Build/Compile
-	$(call GoPackage/Build/Compile)
-ifeq ($(CONFIG_DNSPROXY_COMPRESS_UPX),y)
-	$(STAGING_DIR_HOST)/bin/upx --lzma --best $(GO_PKG_BUILD_BIN_DIR)/dnsproxy
-endif
+define Package/dnsproxy/install
+	$(call GoPackage/Package/Install/Bin,$(1))
+
+	$(INSTALL_DIR) $(1)/etc/config/
+	$(INSTALL_CONF) $(CURDIR)/files/dnsproxy.config $(1)/etc/config/dnsproxy
+	$(INSTALL_DIR) $(1)/etc/init.d/
+	$(INSTALL_BIN) $(CURDIR)/files/dnsproxy.init $(1)/etc/init.d/dnsproxy
+endef
+
+define Package/dnsproxy/conffiles
+/etc/config/dnsproxy
 endef
 
 $(eval $(call GoBinPackage,dnsproxy))
