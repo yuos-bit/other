@@ -48,16 +48,16 @@ sed -i '/set wireless.radio${devidx}.disabled/d' /lib/wifi/mac80211.sh
 wifi up
 
 
-echo -e '\n小渔学长 Build @ '$(date "+%Y.%m.%d")'\n'  >> package/base-files/files/etc/banner
+echo -e '\n小渔学长 Build @ '$(TZ=CST-8 date "+%Y.%m.%d")'\n'  >> package/base-files/files/etc/banner
 
 sed -i '/DISTRIB_REVISION/d' package/base-files/files/etc/openwrt_release
-echo "DISTRIB_REVISION='$(date "+%Y.%m.%d")'" >> package/base-files/files/etc/openwrt_release
+echo "DISTRIB_REVISION='$(TZ=CST-8 date "+%Y.%m.%d")'" >> package/base-files/files/etc/openwrt_release
 
 sed -i '/DISTRIB_DESCRIPTION/d' package/base-files/files/etc/openwrt_release
-echo "DISTRIB_REVISION='$(date "+%Y.%m.%d")'" >> package/base-files/files/etc/openwrt_release
+echo "DISTRIB_REVISION='$(TZ=CST-8 date "+%Y.%m.%d")'" >> package/base-files/files/etc/openwrt_release
 
 sed -i '/DISTRIB_DESCRIPTION/d' /etc/openwrt_release
-echo "DISTRIB_DESCRIPTION='OpenWrt @ 小渔学长 Build $(date "+%Y.%m.%d")'" >> /etc/openwrt_release
+echo "DISTRIB_DESCRIPTION='OpenWrt @ 小渔学长 Build $(TZ=CST-8 date "+%Y.%m.%d")'" >> /etc/openwrt_release
 
 
 # 删除状态页不需显示的
