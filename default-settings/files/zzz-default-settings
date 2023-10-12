@@ -38,7 +38,7 @@ uci commit dhcp
 
 #uci set network.lan.ipaddr='192.168.119.254'
 #uci set network.lan.netmask='255.255.255.0'
-uci set network.lan.gateway='10.32.0.1'
+uci set network.lan.gateway='192.168.8.1'
 uci set network.lan.dns='223.5.5.5 223.6.6.6 119.29.29.29 114.114.114.114 8.8.8.8'
 uci set network.lan.ip6assign='64'
 uci set network.lan.ifname='eth0'
@@ -56,6 +56,24 @@ uci set network.wan6.ifname='wan'
 uci set network.wan6.reqaddress='try'
 uci set network.wan6.reqprefix='auto'
 uci commit network
+
+# 启用 UA2F
+uci set ua2f.enabled.enabled=1
+# 可选的防火墙配置选项
+# 是否自动添加防火墙规则
+uci set ua2f.firewall.handle_fw=1
+# 是否尝试处理 443 端口的流量， 通常来说，流经 443 端口的流量是加密的，因此无需处理
+uci set ua2f.firewall.handle_tls=1
+# 是否处理微信的流量，微信的流量通常是加密的，因此无需处理。这一规则在启用 nftables 时无效
+uci set ua2f.firewall.handle_mmtls=1
+# 是否处理内网流量，如果你的路由器是在内网中，且你想要处理内网中的流量，那么请启用这一选项
+uci set ua2f.firewall.handle_intranet=1
+# 应用配置
+uci commit ua2f
+# 开机自启
+service ua2f enable
+# 启动 UA2F
+service ua2f start
 
 
 sed -i '/option disabled/d' /etc/config/wireless
