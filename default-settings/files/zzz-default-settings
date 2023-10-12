@@ -41,7 +41,20 @@ uci commit dhcp
 uci set network.lan.gateway='10.32.0.1'
 uci set network.lan.dns='223.5.5.5 223.6.6.6 119.29.29.29 114.114.114.114 8.8.8.8'
 uci set network.lan.ip6assign='64'
+uci set network.lan.ifname='eth0'
+
+uci set network.wan.device='wan'
+uci set network.wan.proto='dhcp'
+uci set network.wan.ifname='wan'
+# uci add_list network.wan.dns='223.5.5.5 223.6.6.6 119.29.29.29 114.114.114.114 8.8.8.8'
+# 参考: https://github.com/morrownr/USB-WiFi/discussions/145
+uci set network.wan.device='wan'
+uci set network.wan.proto='dhcpv6'
+uci set network.wan.ifname='wan'
+uci set network.wan.reqaddress='try'
+uci set network.wan.reqprefix='auto'
 uci commit network
+
 
 sed -i '/option disabled/d' /etc/config/wireless
 sed -i '/set wireless.radio${devidx}.disabled/d' /lib/wifi/mac80211.sh
