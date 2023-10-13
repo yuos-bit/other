@@ -36,26 +36,50 @@ uci delete dhcp.lan.dhcpv6
 uci delete dhcp.lan.ndp
 uci commit dhcp
 
-#uci set network.lan.ipaddr='192.168.119.254'
-#uci set network.lan.netmask='255.255.255.0'
+uci set network.lan.ipaddr='192.168.18.1'
+uci set network.lan.netmask='255.255.255.0'
 uci set network.lan.gateway='192.168.18.1'
 uci set network.lan.dns='223.5.5.5 223.6.6.6 119.29.29.29 114.114.114.114 8.8.8.8'
 uci set network.lan.ip6assign='64'
 uci set network.lan.ifname='eth0'
 
-# uci set network.wan='interface'
-# uci set network.wan.device='wan'
-# uci set network.wan.proto='dhcp'
-# uci set network.wan.ifname='wan'
-# uci add_list network.wan.dns='223.5.5.5 223.6.6.6 119.29.29.29 114.114.114.114 8.8.8.8'
 # 参考: https://github.com/morrownr/USB-WiFi/discussions/145
-# uci set network.wan6='interface'
-# uci set network.wan6.device='wan'
-# uci set network.wan6.proto='dhcpv6'
-# uci set network.wan6.ifname='wan'
-# uci set network.wan6.reqaddress='try'
-# uci set network.wan6.reqprefix='auto'
-# uci commit network
+# 解决接口报错不受支持的协议问题
+uci set network.wan.device='eth0.2'
+uci set network.wan.proto='dhcp'
+uci set network.wan.ifname='eth0.2'
+uci set network.wan6.device='eth0.2'
+uci set network.wan6.proto='dhcpv6'
+uci set network.wan6.ifname='eth0.2'
+uci set network.wan6.reqaddress='try'
+uci set network.wan6.reqprefix='auto'
+uci set network.switch.name='switch0'
+uci set network.switch.reset='1'
+uci set network.switch.enable_vlan='1'
+uci set network.switch_vlan.device='switch0'
+uci set network.switch_vlan.vlan='1'
+uci set network.switch_vlan.ports='1 4 6t'
+uci set network.switch_vlan.device='switch0'
+uci set network.switch_vlan.vlan='2'
+uci set network.switch_vlan.ports='0 6t'
+uci commit network
+
+uci set firewall.zone.name='wan'
+uci add_list firewall.network='wan'
+uci add_list firewall.network='wan6'
+uci set firewall.zone.input='REJECT'
+uci set firewall.zone.output='ACCEPT'
+uci set firewall.zone.forward='REJECT'
+uci set firewall.zone.masq='1'
+uci set firewall.zone.mtu_fix='1'
+uci set firewall.forwarding.src='lan'
+uci set firewall.forwarding.dest='wan'
+uci commit firewall
+
+uci set dhcp.wan=dhcp
+uci set dhcp.wan.interface='wan'
+uci set dhcp.wan.ignore='1'
+uci commit dhcp
 
 # 启用 UA2F
 uci set ua2f.enabled.enabled=1
