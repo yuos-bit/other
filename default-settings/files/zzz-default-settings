@@ -38,7 +38,7 @@ uci commit dhcp
 
 #uci set network.lan.ipaddr='192.168.119.254'
 #uci set network.lan.netmask='255.255.255.0'
-uci set network.lan.gateway='192.168.8.1'
+uci set network.lan.gateway='192.168.18.1'
 uci set network.lan.dns='223.5.5.5 223.6.6.6 119.29.29.29 114.114.114.114 8.8.8.8'
 uci set network.lan.ip6assign='64'
 uci set network.lan.ifname='eth0'
