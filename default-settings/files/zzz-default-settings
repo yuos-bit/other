@@ -49,6 +49,15 @@ uci commit network
 
 # 参考: https://github.com/morrownr/USB-WiFi/discussions/145
 # 解决接口报错不受支持的协议问题
+
+uci set network.wan
+uci set network.wan.ifname='wan'
+
+uci set network.wan6
+uci set network.wan6.ifname='wan'
+uci set network.wan6.reqaddress='try'
+uci set network.wan6.reqprefix='auto'
+
 # uci set network.wan.device='eth0.2'
 # uci set network.wan.proto='dhcp'
 # uci set network.wan.ifname='eth0.2'
