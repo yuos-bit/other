@@ -58,41 +58,12 @@ uci set network.wan6.ifname='wan'
 uci set network.wan6.reqaddress='try'
 uci set network.wan6.reqprefix='auto'
 
-# uci set network.wan.device='eth0.2'
-# uci set network.wan.proto='dhcp'
-# uci set network.wan.ifname='eth0.2'
-# uci set network.wan6.device='eth0.2'
-# uci set network.wan6.proto='dhcpv6'
-# uci set network.wan6.ifname='eth0.2'
-# uci set network.wan6.reqaddress='try'
-# uci set network.wan6.reqprefix='auto'
-# uci set network.switch.name='switch0'
-# uci set network.switch.reset='1'
-# uci set network.switch.enable_vlan='1'
-# uci set network.switch_vlan.device='switch0'
-# uci set network.switch_vlan.vlan='1'
-# uci set network.switch_vlan.ports='1 4 6t'
-# uci set network.switch_vlan.device='switch0'
-# uci set network.switch_vlan.vlan='2'
-# uci set network.switch_vlan.ports='0 6t'
-# uci commit network
-
-# uci set firewall.zone.name='wan'
-# uci add_list firewall.network='wan'
-# uci add_list firewall.network='wan6'
-# uci set firewall.zone.input='REJECT'
-# uci set firewall.zone.output='ACCEPT'
-# uci set firewall.zone.forward='REJECT'
-# uci set firewall.zone.masq='1'
-# uci set firewall.zone.mtu_fix='1'
-# uci set firewall.forwarding.src='lan'
-# uci set firewall.forwarding.dest='wan'
-# uci commit firewall
-
-# uci set dhcp.wan=dhcp
-# uci set dhcp.wan.interface='wan'
-# uci set dhcp.wan.ignore='1'
-# uci commit dhcp
+# 设置LED状态灯
+uci set system.led_wan
+uci set system.led_wan.default='1'
+uci set system.led_wan.dev='wan'
+uci set system.led_wan.mode='link tx rx'
+uci set system.led_wan.trigger='netdev'
 
 
 sed -i '/option disabled/d' /etc/config/wireless
