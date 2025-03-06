@@ -8,19 +8,21 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=shadowsocksr-libev
 PKG_VERSION:=2.5.6
-PKG_RELEASE:=9
+PKG_RELEASE:=11
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=https://github.com/shadowsocksrr/shadowsocksr-libev
+PKG_SOURCE_URL:=https://github.com/yuos-bit/shadowsocksr-libev.git
 PKG_SOURCE_DATE:=2018-03-07
-PKG_SOURCE_VERSION:=d63ff863800a5645aca4309d5dd5962bd1e95543
+PKG_SOURCE_VERSION:=01ef77b2b4175e8c90a80a61fa9b5a916cd18867
 PKG_MIRROR_HASH:=34308ed827a5dd4f4e35619914102d55b00604faa44fda051d1d25fb4a319325
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-$(PKG_SOURCE_VERSION).tar.xz
 
 PKG_LICENSE:=GPL-3.0
 PKG_LICENSE_FILES:=LICENSE
 
 PKG_FIXUP:=autoreconf
 PKG_USE_MIPS16:=0
+PKG_BUILD_FLAGS:=no-mips16
 PKG_BUILD_PARALLEL:=1
 PKG_INSTALL:=1
 
@@ -32,8 +34,8 @@ define Package/shadowsocksr-libev/Default
     CATEGORY:=Network
     SUBMENU:=Web Servers/Proxies
     TITLE:=shadowsocksr-libev ssr-$(1)
-    URL:=https://github.com/shadowsocksrr/shadowsocksr-libev
-    DEPENDS:=+libev +libsodium +libopenssl +libpthread +libpcre +libudns +zlib
+    URL:=https://github.com/yuos-bit/shadowsocksr-libev
+    DEPENDS:=+libev +libsodium +libopenssl +libpthread +libpcre2 +libudns +zlib
   endef
 
   define Package/shadowsocksr-libev-ssr-$(1)/install
