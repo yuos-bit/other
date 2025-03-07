@@ -58,12 +58,14 @@ uci set network.wan6.ifname='wan'
 uci set network.wan6.reqaddress='try'
 uci set network.wan6.reqprefix='auto'
 
-# 设置LED状态灯
-uci set system.led_wan
-uci set system.led_wan.default='1'
-uci set system.led_wan.dev='wan'
-uci set system.led_wan.mode='link tx rx'
-uci set system.led_wan.trigger='netdev'
+# 设置wifi名字
+uci set wireless.default_MT7981_1_1.ssid='Xiaomi-XXXX'
+uci set wireless.default_MT7981_1_1.encryption='sae-mixed'
+uci set wireless.default_MT7981_1_1.key='1234567890'
+
+uci set wireless.default_MT7981_1_2.ssid='Xiaomi-XXXX-5G'
+uci set wireless.default_MT7981_1_2.encryption='sae-mixed'
+uci set wireless.default_MT7981_1_2.key='1234567890'
 
 
 sed -i '/option disabled/d' /etc/config/wireless
