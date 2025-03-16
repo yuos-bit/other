@@ -1,35 +1,42 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=xray-core
-PKG_VERSION:=1.8.3
-PKG_RELEASE:=1
+PKG_VERSION:=1.8.7
+PKG_RELEASE:=77
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/XTLS/Xray-core/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=bdfa65c15cd25f931745d9c70c753503db5d119ff11960ca7b3a2e19c4b0a8d1
+PKG_HASH:=skip
 
 PKG_MAINTAINER:=Tianling Shen <cnsztl@immortalwrt.org>
 PKG_LICENSE:=MPL-2.0
 PKG_LICENSE_FILES:=LICENSE
 
-PKG_CONFIG_DEPENDS:= \
-	CONFIG_XRAY_CORE_COMPRESS_GOPROXY \
-	CONFIG_XRAY_CORE_COMPRESS_UPX \
-
-PKG_BUILD_DIR:=$(BUILD_DIR)/Xray-core-$(PKG_VERSION)
-PKG_BUILD_DEPENDS:=golang/host
+PKG_BUILD_DEPENDS:=golang/host 
 PKG_BUILD_PARALLEL:=1
 PKG_USE_MIPS16:=0
+PKG_BUILD_FLAGS:=no-mips16
 
 GO_PKG:=github.com/xtls/xray-core
-GO_PKG_BUILD_PKG:=github.com/xtls/xray-core/main
+GO_PKG_BUILD_PKG:=$(GO_PKG)/main
 GO_PKG_LDFLAGS_X:= \
 	$(GO_PKG)/core.build=OpenWrt \
 	$(GO_PKG)/core.version=$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk
 include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk
-
+define Download/upx
+  FILE:=upx-4.2.3-amd64_linux.tar.xz
+  URL_FILE:=upx.tar.xz
+  URL:=https://github.com/upx/upx/releases/download/v4.2.3/
+  HASH:=skip
+endef
+define Build/Prepare
+	$(call Build/Prepare/Default)
+	$(eval $(call Download,upx))
+	$(TAR) --strip-components=1 -C $(PKG_BUILD_DIR)/ -xvf $(DL_DIR)/upx-4.2.3-amd64_linux.tar.xz
+	$(CP) $(PKG_BUILD_DIR)/upx $(STAGING_DIR_HOST)/bin/upx
+endef
 define Package/xray/template
   TITLE:=A platform for building proxies to bypass network restrictions
   SECTION:=net
@@ -64,17 +71,6 @@ define Package/xray-example/description
   This includes example configuration files for xray-core.
 endef
 
-config XRAY_CORE_COMPRESS_GOPROXY
-	bool "Compiling with GOPROXY proxy"
-	default n
-
-config XRAY_CORE_COMPRESS_UPX
-	bool "Compress executable files with UPX"
-	depends on !mips64
-	default n
-endmenu
-endef
-
 define Package/xray-core/conffiles
 /etc/xray/
 /etc/config/xray
@@ -83,23 +79,9 @@ endef
 define Package/xray-core/install
 	$(call GoPackage/Package/Install/Bin,$(PKG_INSTALL_DIR))
 	$(INSTALL_DIR) $(1)/usr/bin/
-  $(STAGING_DIR_HOST)/bin/upx --lzma --best $(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/main
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/main $(1)/usr/bin/xray
-
-	$(INSTALL_DIR) $(1)/etc/xray/
-	$(INSTALL_DATA) $(CURDIR)/files/config.json.example $(1)/etc/xray/
-
-	$(INSTALL_DIR) $(1)/etc/config/
-	$(INSTALL_CONF) $(CURDIR)/files/xray.conf $(1)/etc/config/xray
-	$(INSTALL_DIR) $(1)/etc/init.d/
-	$(INSTALL_BIN) $(CURDIR)/files/xray.init $(1)/etc/init.d/xray
-endef
-
-define Package/xray-example/install
-	$(INSTALL_DIR) $(1)/etc/xray/
-	$(INSTALL_DATA) $(CURDIR)/files/vpoint_socks_vmess.json $(1)/etc/xray/
-	$(INSTALL_DATA) $(CURDIR)/files/vpoint_vmess_freedom.json $(1)/etc/xray/
+	$(STAGING_DIR_HOST)/bin/upx --lzma --best $(1)/usr/bin/xray
+	
 endef
 
 $(eval $(call BuildPackage,xray-core))
-$(eval $(call BuildPackage,xray-example))
