@@ -82,7 +82,7 @@ define Package/xray-core/install
 	$(call GoPackage/Package/Install/Bin,$(PKG_INSTALL_DIR))
 	$(INSTALL_DIR) $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/main $(1)/usr/bin/xray
-        $(STAGING_DIR_HOST)/bin/upx --lzma --best $(1)/usr/bin/xray
+	$(STAGING_DIR_HOST)/bin/upx --lzma --best $(1)/usr/bin/xray
 
 	$(INSTALL_DIR) $(1)/etc/xray/
 	$(INSTALL_DATA) $(CURDIR)/files/config.json.example $(1)/etc/xray/
