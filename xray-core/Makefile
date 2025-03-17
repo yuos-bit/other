@@ -26,18 +26,19 @@ GO_PKG_LDFLAGS_X:= \
 include $(INCLUDE_DIR)/package.mk
 include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk
 
-define Download/upx
-  FILE:=upx-4.2.3-amd64_linux.tar.xz
-  URL_FILE:=upx.tar.xz
-  URL:=https://github.com/upx/upx/releases/download/v4.2.3/
-  HASH:=skip
-endef
-define Build/Prepare
-	$(call Build/Prepare/Default)
-	$(eval $(call Download,upx))
-	$(TAR) --strip-components=1 -C $(PKG_BUILD_DIR)/ -xvf $(DL_DIR)/upx-4.2.3-amd64_linux.tar.xz
-	$(CP) $(PKG_BUILD_DIR)/upx $(STAGING_DIR_HOST)/bin/upx
-endef
+# define Download/upx
+#   FILE:=upx-4.2.3-amd64_linux.tar.xz
+#   URL_FILE:=upx.tar.xz
+#   URL:=https://github.com/upx/upx/releases/download/v4.2.3/
+#   HASH:=skip
+# endef
+#
+# define Build/Prepare
+# 	$(call Build/Prepare/Default)
+# 	$(eval $(call Download,upx))
+# 	$(TAR) --strip-components=1 -C $(PKG_BUILD_DIR)/ -xvf $(DL_DIR)/upx-4.2.3-amd64_linux.tar.xz
+# 	$(CP) $(PKG_BUILD_DIR)/upx $(STAGING_DIR_HOST)/bin/upx
+# endef
 
 define Package/xray/template
   TITLE:=A platform for building proxies to bypass network restrictions
@@ -81,8 +82,7 @@ endef
 define Package/xray-core/install
 	$(call GoPackage/Package/Install/Bin,$(PKG_INSTALL_DIR))
 	$(INSTALL_DIR) $(1)/usr/bin/
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/main $(1)/usr/bin/xray
-	$(STAGING_DIR_HOST)/bin/upx --lzma --best $(1)/usr/bin/xray
+	$(INSTALL_BIN) $(CURDIR)/files/xray $(1)/usr/bin/xray
 
 	$(INSTALL_DIR) $(1)/etc/xray/
 	$(INSTALL_DATA) $(CURDIR)/files/config.json.example $(1)/etc/xray/
