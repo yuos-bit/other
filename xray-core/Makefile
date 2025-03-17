@@ -80,7 +80,6 @@ define Package/xray-core/conffiles
 endef
 
 define Package/xray-core/install
-	$(call GoPackage/Package/Install/Bin,$(PKG_INSTALL_DIR))
 	$(INSTALL_DIR) $(1)/usr/bin/
 	$(INSTALL_BIN) $(CURDIR)/files/xray $(1)/usr/bin/xray
 
