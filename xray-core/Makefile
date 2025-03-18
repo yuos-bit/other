@@ -4,41 +4,11 @@ PKG_NAME:=xray-core
 PKG_VERSION:=1.8.4
 PKG_RELEASE:=1
 
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://codeload.github.com/XTLS/Xray-core/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=skip
-
 PKG_MAINTAINER:=Tianling Shen <cnsztl@immortalwrt.org>
 PKG_LICENSE:=MPL-2.0
 PKG_LICENSE_FILES:=LICENSE
 
-PKG_BUILD_DIR:=$(BUILD_DIR)/Xray-core-$(PKG_VERSION)
-PKG_BUILD_DEPENDS:=golang/host
-PKG_BUILD_PARALLEL:=1
-PKG_USE_MIPS16:=0
-
-GO_PKG:=github.com/xtls/xray-core
-GO_PKG_BUILD_PKG:=github.com/xtls/xray-core/main
-GO_PKG_LDFLAGS_X:= \
-	$(GO_PKG)/core.build=OpenWrt \
-	$(GO_PKG)/core.version=$(PKG_VERSION)
-
 include $(INCLUDE_DIR)/package.mk
-include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk
-
-# define Download/upx
-#   FILE:=upx-4.2.3-amd64_linux.tar.xz
-#   URL_FILE:=upx.tar.xz
-#   URL:=https://github.com/upx/upx/releases/download/v4.2.3/
-#   HASH:=skip
-# endef
-#
-# define Build/Prepare
-# 	$(call Build/Prepare/Default)
-# 	$(eval $(call Download,upx))
-# 	$(TAR) --strip-components=1 -C $(PKG_BUILD_DIR)/ -xvf $(DL_DIR)/upx-4.2.3-amd64_linux.tar.xz
-# 	$(CP) $(PKG_BUILD_DIR)/upx $(STAGING_DIR_HOST)/bin/upx
-# endef
 
 define Package/xray/template
   TITLE:=A platform for building proxies to bypass network restrictions
@@ -49,7 +19,7 @@ endef
 
 define Package/xray-core
   $(call Package/xray/template)
-  DEPENDS:=$(GO_ARCH_DEPENDS) +ca-bundle
+  DEPENDS:=+ca-bundle
 endef
 
 define Package/xray-example
@@ -77,6 +47,15 @@ endef
 define Package/xray-core/conffiles
 /etc/xray/
 /etc/config/xray
+endef
+
+define Build/Prepare
+endef
+
+define Build/Configure
+endef
+
+define Build/Compile
 endef
 
 define Package/xray-core/install
