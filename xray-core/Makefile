@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=xray-core
-PKG_VERSION:=1.8.4
+PKG_VERSION:=1.5.3
 PKG_RELEASE:=1
 
 PKG_MAINTAINER:=Tianling Shen <cnsztl@immortalwrt.org>
