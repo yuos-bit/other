@@ -65,10 +65,10 @@ DEVICE_MODEL=$(cat /tmp/sysinfo/model 2>/dev/null)
 [ -z "$DEVICE_MODEL" ] && DEVICE_MODEL="OpenWrt"  # 若获取失败则使用默认值
 
 # 获取无线网口 MAC 地址（这里假设无线接口为 wlan0，根据实际情况调整）
-MAC=$(cat /sys/class/net/wlan0/address 2>/dev/null)
+MAC=$(cat /sys/class/net/eth1/address 2>/dev/null)
 if [ -n "$MAC" ]; then
-    # 去除冒号后取后4位，并转换为大写
-    MAC_LAST4=$(echo "$MAC" | sed 's/://g' | awk '{print substr($0,length($0)-3,4)}' | tr '[:lower:]' '[:upper:]')
+    # 去除冒号后取前4位，并转换为大写
+    MAC_LAST4=$(echo "$MAC" | sed 's/://g' | awk '{print substr($0,1,4)}' | tr '[:lower:]' '[:upper:]')
 else
     MAC_LAST4="XXXX"
 fi
@@ -87,15 +87,25 @@ uci set wireless.default_MT7981_1_1.ssid="${NEW_SSID}"
 uci set wireless.default_MT7981_1_1.encryption='sae-mixed'
 uci set wireless.default_MT7981_1_1.key='1234567890'
 uci set wireless.default_MT7981_1_1.uapsd='0'
+uci set wireless.default_MT7981_1_1.mumimo_dl='1'
+uci set wireless.default_MT7981_1_1.mumimo_ul='1'
 # 5G 无线：在 SSID 后增加 -5G
 uci set wireless.default_MT7981_1_2.ssid="${NEW_SSID}-5G"
 uci set wireless.default_MT7981_1_2.encryption='sae-mixed'
 uci set wireless.default_MT7981_1_2.key='1234567890'
 uci set wireless.default_MT7981_1_2.uapsd='0'
+uci set wireless.default_MT7981_1_2.mumimo_dl='1'
+uci set wireless.default_MT7981_1_2.mumimo_ul='1'
 uci commit wireless
 # 设置硬件加速
 uci set turboacc.global.set='1'
 uci set turboacc.config.fullcone='1'
+uci set turboacc.config.fastpath='mediatek_hnat'
+uci set turboacc.config.fastpath_mh_eth_hnat='1'
+uci set turboacc.config.fastpath_mh_eth_hnat_v6='1'
+uci set turboacc.config.fastpath_mh_eth_hnat_macvlan='1'
+uci set turboacc.config.fastpath_mh_eth_hnat_ppenum='1'
+uci set turboacc.config.tcpcca='cubic'
 
 sed -i '/option disabled/d' /etc/config/wireless
 sed -i '/set wireless.radio${devidx}.disabled/d' /lib/wifi/mac80211.sh
