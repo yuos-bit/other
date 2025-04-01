@@ -73,7 +73,7 @@ else
     MAC_LAST4="XXXX"
 fi
 
-# 生成新的 SSID，格式为“设备型号+_MAC后四位”
+# 生成新的 SSID，格式为“设备型号+_MAC前四位”
 NEW_SSID="${DEVICE_MODEL}_${MAC_LAST4}"
 
 # 设置系统主机名为设备型号
@@ -83,19 +83,33 @@ uci commit system
 ##########################################
 # 设置无线配置（动态 SSID）
 # 2.4G 无线
-uci set wireless.default_MT7981_1_1.ssid="${NEW_SSID}"
-uci set wireless.default_MT7981_1_1.encryption='sae-mixed'
-uci set wireless.default_MT7981_1_1.key='1234567890'
-uci set wireless.default_MT7981_1_1.uapsd='0'
-uci set wireless.default_MT7981_1_1.mumimo_dl='1'
-uci set wireless.default_MT7981_1_1.mumimo_ul='1'
+uci set wireless.default_radio0
+uci set wireless.default_radio0.ssid="${NEW_SSID}"
+uci set wireless.default_radio0.encryption='sae-mixed'
+uci set wireless.default_radio0.key='1234567890'
+uci set wireless.radio0
+uci set wireless.radio0.band='2g'
+uci set wireless.radio0.channel='auto'
+uci set wireless.radio0.country='US'
+uci set wireless.radio0.distance='100'
+uci set wireless.radio0.legacy_rates='1'
+uci set wireless.radio0.mu_beamformer='1'
+uci set wireless.radio0.txpower='20'
 # 5G 无线：在 SSID 后增加 -5G
-uci set wireless.default_MT7981_1_2.ssid="${NEW_SSID}-5G"
-uci set wireless.default_MT7981_1_2.encryption='sae-mixed'
-uci set wireless.default_MT7981_1_2.key='1234567890'
-uci set wireless.default_MT7981_1_2.uapsd='0'
-uci set wireless.default_MT7981_1_2.mumimo_dl='1'
-uci set wireless.default_MT7981_1_2.mumimo_ul='1'
+uci set wireless.default_radio1
+uci set wireless.default_radio1.ssid="${NEW_SSID}-5G"
+uci set wireless.default_radio1.encryption='psk-mixed'
+uci set wireless.default_radio1.key='1234567890'
+uci set wireless.radio1
+uci set wireless.radio1.band='2g'
+uci set wireless.radio1.channel='auto'
+uci set wireless.radio1.country='US'
+uci set wireless.radio1.distance='100'
+uci set wireless.radio1.htmode='HT40'
+uci set wireless.radio1.legacy_rates='1'
+uci set wireless.radio1.mu_beamformer='1'
+uci set wireless.radio1.txpower='25'
+uci set wireless.radio1.vendor_vht='1'
 uci commit wireless
 # 设置硬件加速
 uci set turboacc.global.set='1'
