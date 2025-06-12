@@ -18,24 +18,26 @@ PKG_RELEASE:=1
 
 PKG_MAINTAINER:=Zephyr Lykos <self@mochaa.ws>, \
                 Sandro Jäckel <sandro.jaeckel@gmail.com>
+
 PKG_LICENSE:=BSD-3-Clause
 PKG_LICENSE_FILES:=LICENSE
-
-# 移除不必要的构建依赖和配置
-# PKG_BUILD_DIR:=$(BUILD_DIR)/tailscale-$(PKG_VERSION)
-# PKG_BUILD_DEPENDS:=golang/host
-# PKG_BUILD_PARALLEL:=1
-# PKG_BUILD_FLAGS:=no-mips16
-
-# GO_PKG:=\
-#     tailscale.com/cmd/tailscaled
-# GO_PKG_LDFLAGS:=-X 'tailscale.com/version.longStamp=$(PKG_VERSION)-$(PKG_RELEASE) (OpenWrt)'
-# GO_PKG_LDFLAGS_X:=tailscale.com/version.shortStamp=$(PKG_VERSION)
-# GO_PKG_TAGS:=ts_include_cli,ts_omit_aws,ts_omit_bird,ts_omit_tap,ts_omit_kube,ts_omit_completion
+PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk
-# 移除 golang-package.mk，因为不再需要 Go 编译
-# include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk
+
+define Build/Prepare
+	mkdir -p $(PKG_BUILD_DIR)
+	$(CP) ./tailscaled-linux-mipsle $(PKG_BUILD_DIR)/
+endef
+
+define Build/InstallDev
+endef
+
+define Build/Compile
+endef
+
+define Build/Configure
+endef
 
 define Package/tailscale
   SECTION:=net
@@ -43,7 +45,7 @@ define Package/tailscale
   SUBMENU:=VPN
   TITLE:=Zero config VPN
   URL:=https://tailscale.com
-  DEPENDS:=$(GO_ARCH_DEPENDS) +ca-bundle +kmod-tun
+  DEPENDS:= +ca-bundle +kmod-tun
   PROVIDES:=tailscaled
 endef
 
@@ -59,7 +61,7 @@ endef
 
 define Package/tailscale/install
 	$(INSTALL_DIR) $(1)/usr/sbin $(1)/etc/init.d $(1)/etc/config
-	$(INSTALL_BIN) ./tailscaled-linux-mipsle $(1)/usr/sbin/tailscaled
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/tailscaled-linux-mipsle $(1)/usr/sbin/tailscaled
 	$(LN) tailscaled $(1)/usr/sbin/tailscale
 	$(INSTALL_BIN) ./files/tailscale.init $(1)/etc/init.d/tailscale
 	$(INSTALL_DATA) ./files/tailscale.conf $(1)/etc/config/tailscale
