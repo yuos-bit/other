@@ -58,11 +58,11 @@ define Package/tailscale/conffiles
 endef
 
 define Package/tailscale/install
-    $(INSTALL_DIR) $(1)/usr/sbin $(1)/etc/init.d $(1)/etc/config
-    $(INSTALL_BIN) ./tailscaled-linux-mipsle $(1)/usr/sbin/tailscaled
-    $(LN) tailscaled $(1)/usr/sbin/tailscale
-    $(INSTALL_BIN) ./files//tailscale.init $(1)/etc/init.d/tailscale
-    $(INSTALL_DATA) ./files//tailscale.conf $(1)/etc/config/tailscale
+  $(INSTALL_DIR) $(1)/usr/sbin $(1)/etc/init.d $(1)/etc/config
+  $(INSTALL_BIN) ./tailscaled-linux-mipsle $(1)/usr/sbin/tailscaled
+  $(LN) tailscaled $(1)/usr/sbin/tailscale
+  $(INSTALL_BIN) ./files/tailscale.init $(1)/etc/init.d/tailscale
+  $(INSTALL_DATA) ./files/tailscale.conf $(1)/etc/config/tailscale
 endef
 
 $(eval $(call BuildPackage,tailscale))
