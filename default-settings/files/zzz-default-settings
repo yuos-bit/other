@@ -4,7 +4,7 @@ touch /etc/crontabs/root
 
 uci set luci.main.lang=zh_cn
 #设置默认主题
-uci set luci.main.mediaurlbase=/luci-static/edge
+# uci set luci.main.mediaurlbase=/luci-static/edge
 uci commit luci
 
 uci set system.@system[0].timezone=CST-8
