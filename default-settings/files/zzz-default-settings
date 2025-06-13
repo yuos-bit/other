@@ -44,7 +44,6 @@ uci set network.lan.netmask='255.255.255.0'
 uci set network.lan.gateway='10.32.0.1'
 uci set network.lan.dns='223.5.5.5 119.29.29.29 8.8.8.8'
 uci set network.lan.ip6assign='64'
-uci set network.lan.ifname='eth0'
 uci commit network
 
 # 参考: https://github.com/morrownr/USB-WiFi/discussions/145
@@ -64,17 +63,8 @@ uci set network.wan6.reqprefix='auto'
 DEVICE_MODEL=$(cat /tmp/sysinfo/model 2>/dev/null)
 [ -z "$DEVICE_MODEL" ] && DEVICE_MODEL="OpenWrt"  # 若获取失败则使用默认值
 
-# 获取无线网口 MAC 地址（这里假设无线接口为 wlan0，根据实际情况调整）
-MAC=$(cat /sys/class/net/eth1/address 2>/dev/null)
-if [ -n "$MAC" ]; then
-    # 去除冒号后取前4位，并转换为大写
-    MAC_LAST4=$(echo "$MAC" | sed 's/://g' | awk '{print substr($0,1,4)}' | tr '[:lower:]' '[:upper:]')
-else
-    MAC_LAST4="XXXX"
-fi
-
+NEW_SSID="${DEVICE_MODEL}_$(cat /sys/class/ieee80211/${dev}/macaddress|awk -F ":" '{print $2""$3""$7 }'| tr a-z A-Z)"
 # 生成新的 SSID，格式为“设备型号+_MAC前四位”
-NEW_SSID="${DEVICE_MODEL}_${MAC_LAST4}"
 
 # 设置系统主机名为设备型号
 uci set system.@system[0].hostname="${DEVICE_MODEL}"
@@ -85,31 +75,15 @@ uci commit system
 # 2.4G 无线
 uci set wireless.default_radio0
 uci set wireless.default_radio0.ssid="${NEW_SSID}"
-uci set wireless.default_radio0.encryption='sae-mixed'
+uci set wireless.default_radio0.encryption='psk2'
 uci set wireless.default_radio0.key='1234567890'
-uci set wireless.radio0
-uci set wireless.radio0.band='2g'
-uci set wireless.radio0.channel='auto'
-uci set wireless.radio0.country='US'
-uci set wireless.radio0.distance='100'
-uci set wireless.radio0.legacy_rates='1'
-uci set wireless.radio0.mu_beamformer='1'
-uci set wireless.radio0.txpower='20'
+
 # 5G 无线：在 SSID 后增加 -5G
 uci set wireless.default_radio1
 uci set wireless.default_radio1.ssid="${NEW_SSID}-5G"
-uci set wireless.default_radio1.encryption='psk-mixed'
+uci set wireless.default_radio1.encryption='psk2'
 uci set wireless.default_radio1.key='1234567890'
-uci set wireless.radio1
-uci set wireless.radio1.band='2g'
-uci set wireless.radio1.channel='auto'
-uci set wireless.radio1.country='US'
-uci set wireless.radio1.distance='100'
-uci set wireless.radio1.htmode='HT40'
-uci set wireless.radio1.legacy_rates='1'
-uci set wireless.radio1.mu_beamformer='1'
-uci set wireless.radio1.txpower='25'
-uci set wireless.radio1.vendor_vht='1'
+
 uci commit wireless
 # 设置硬件加速
 uci set turboacc.global.set='1'
