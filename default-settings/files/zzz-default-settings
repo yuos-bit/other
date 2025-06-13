@@ -4,7 +4,7 @@ touch /etc/crontabs/root
 
 uci set luci.main.lang=zh_cn
 #设置默认主题
-#uci set luci.main.mediaurlbase=/luci-static/bootstrap_mod
+uci set luci.main.mediaurlbase=/luci-static/edge
 uci commit luci
 
 uci set system.@system[0].timezone=CST-8
@@ -16,6 +16,7 @@ uci commit fstab
 
 ln -sf /sbin/ip /usr/bin/ip
 
+sed -i "s#19.07-SNAPSHOT#19.07.10#g" /etc/opkg/distfeeds.conf
 sed -i '/lienol/d' /etc/opkg/distfeeds.conf
 sed -i '/other/d' /etc/opkg/distfeeds.conf
 #sed -i 's/downloads.openwrt.org/openwrt.proxy.ustclug.org/g' /etc/opkg/distfeeds.conf
@@ -29,7 +30,6 @@ sed -i 's#downloads.openwrt.org#mirrors.cloud.tencent.com/lede#g' /etc/opkg/dist
 sed -i 's/root::0:0:99999:7:::/root:$1$wEehtjxj$YBu4quNfVUjzfv8p\/PBo5.:0:0:99999:7:::/g' /etc/shadow
 sed -i 's/root:::0:99999:7:::/root:$1$wEehtjxj$YBu4quNfVUjzfv8p\/PBo5.:0:0:99999:7:::/g' /etc/shadow
 
-# 设置DHCP
 uci set dhcp.lan.ra='server'
 uci -q del dhcp.lan.dhcpv6
 uci set dhcp.lan.dns_service='0'
@@ -44,22 +44,8 @@ uci set network.lan.netmask='255.255.255.0'
 uci set network.lan.gateway='10.32.0.1'
 uci set network.lan.dns='223.5.5.5 119.29.29.29 8.8.8.8'
 uci set network.lan.ip6assign='64'
-uci set network.lan.ifname='eth0'
 uci commit network
 
-# 参考: https://github.com/morrownr/USB-WiFi/discussions/145
-# 解决接口报错不受支持的协议问题
-
-uci set network.wan
-uci set network.wan.ifname='wan'
-
-uci set network.wan6
-uci set network.wan6.ifname='wan'
-uci set network.wan6.reqaddress='try'
-uci set network.wan6.reqprefix='auto'
-##########################################
-# 方案二：动态设置主机名和无线 SSID
-#
 # 从 /tmp/sysinfo/model 获取设备型号（请根据实际情况修改路径）
 DEVICE_MODEL=$(cat /tmp/sysinfo/model 2>/dev/null)
 [ -z "$DEVICE_MODEL" ] && DEVICE_MODEL="OpenWrt"  # 若获取失败则使用默认值
@@ -68,26 +54,19 @@ DEVICE_MODEL=$(cat /tmp/sysinfo/model 2>/dev/null)
 uci set system.@system[0].hostname="${DEVICE_MODEL}"
 uci commit system
 
-# 设置硬件加速
-uci set turboacc.global.set='1'
-uci set turboacc.config.fullcone='1'
-uci set turboacc.config.fastpath='mediatek_hnat'
-uci set turboacc.config.fastpath_mh_eth_hnat='1'
-uci set turboacc.config.fastpath_mh_eth_hnat_v6='1'
-uci set turboacc.config.fastpath_mh_eth_hnat_macvlan='1'
-uci set turboacc.config.fastpath_mh_eth_hnat_ppenum='1'
-uci set turboacc.config.tcpcca='cubic'
-
 sed -i '/option disabled/d' /etc/config/wireless
 sed -i '/set wireless.radio${devidx}.disabled/d' /lib/wifi/mac80211.sh
 wifi up
-# 
+
+sed -i '/DISTRIB_DESCRIPTION/d' /etc/openwrt_release
+echo "DISTRIB_DESCRIPTION='OpenWrt 19.07-SNAPSHOT'" >> /etc/openwrt_release
 
 # 删除状态页不需显示的
 rm -rf /usr/lib/lua/luci/view/admin_status/index
 #mv -f /usr/lib/lua/luci/view/admin_status/index /usr/lib/lua/luci/view/admin_status/index_backup 2>/dev/null
 
 sed -i 's#openwrt/luci#lienol/openwrt-luci#g' /usr/lib/lua/luci/view/themes/*/footer.htm
+
 
 #禁用某些可能会自启动且用不上的依赖包服务
 /etc/init.d/php7-fastcgi disable 2>/dev/null
