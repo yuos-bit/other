@@ -63,7 +63,9 @@ uci set network.wan6.reqprefix='auto'
 DEVICE_MODEL=$(cat /tmp/sysinfo/model 2>/dev/null)
 [ -z "$DEVICE_MODEL" ] && DEVICE_MODEL="OpenWrt"  # 若获取失败则使用默认值
 
-NEW_SSID="${DEVICE_MODEL}_$(cat /sys/class/ieee80211/${dev}/macaddress|awk -F ":" '{print $2""$3""$7 }'| tr a-z A-Z)"
+NEW_SSID="${DEVICE_MODEL}_$(cat /sys/class/ieee80211/${dev}/macaddress | \
+awk -F ":" '{print $2""$3""$6 }' | \
+tr '[:lower:]' '[:upper:]')"
 # 生成新的 SSID，格式为“设备型号+_MAC前四位”
 
 # 设置系统主机名为设备型号
@@ -73,27 +75,27 @@ uci commit system
 ##########################################
 # 设置无线配置（动态 SSID）
 # 2.4G 无线
-uci set wireless.default_radio0
-uci set wireless.default_radio0.ssid="${NEW_SSID}"
-uci set wireless.default_radio0.encryption='psk2'
-uci set wireless.default_radio0.key='1234567890'
+# uci set wireless.default_radio0
+# uci set wireless.default_radio0.ssid="${NEW_SSID}"
+# uci set wireless.default_radio0.encryption='psk2'
+# uci set wireless.default_radio0.key='1234567890'
 
 # 5G 无线：在 SSID 后增加 -5G
-uci set wireless.default_radio1
-uci set wireless.default_radio1.ssid="${NEW_SSID}-5G"
-uci set wireless.default_radio1.encryption='psk2'
-uci set wireless.default_radio1.key='1234567890'
+# uci set wireless.default_radio1
+# uci set wireless.default_radio1.ssid="${NEW_SSID}-5G"
+# uci set wireless.default_radio1.encryption='psk2'
+# uci set wireless.default_radio1.key='1234567890'
 
-uci commit wireless
+# uci commit wireless
 # 设置硬件加速
-uci set turboacc.global.set='1'
-uci set turboacc.config.fullcone='1'
-uci set turboacc.config.fastpath='mediatek_hnat'
-uci set turboacc.config.fastpath_mh_eth_hnat='1'
-uci set turboacc.config.fastpath_mh_eth_hnat_v6='1'
-uci set turboacc.config.fastpath_mh_eth_hnat_macvlan='1'
-uci set turboacc.config.fastpath_mh_eth_hnat_ppenum='1'
-uci set turboacc.config.tcpcca='cubic'
+# uci set turboacc.global.set='1'
+# uci set turboacc.config.fullcone='1'
+# uci set turboacc.config.fastpath='mediatek_hnat'
+# uci set turboacc.config.fastpath_mh_eth_hnat='1'
+# uci set turboacc.config.fastpath_mh_eth_hnat_v6='1'
+# uci set turboacc.config.fastpath_mh_eth_hnat_macvlan='1'
+# uci set turboacc.config.fastpath_mh_eth_hnat_ppenum='1'
+# uci set turboacc.config.tcpcca='cubic'
 
 sed -i '/option disabled/d' /etc/config/wireless
 sed -i '/set wireless.radio${devidx}.disabled/d' /lib/wifi/mac80211.sh
