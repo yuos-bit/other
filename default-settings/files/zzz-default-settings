@@ -76,13 +76,12 @@ DEVICE_MODEL=$(cat /tmp/sysinfo/model 2>/dev/null)
 # 获取无线网口 MAC 地址（这里假设无线接口为 wlan0，根据实际情况调整）
 MAC=$(cat /sys/class/net/eth1/address 2>/dev/null)
 if [ -n "$MAC" ]; then
-    # 去除冒号后取前4位，并转换为大写
-    MAC_LAST4=$(echo "$MAC" | tr -d ':' | tr -d '\n' | cut -c1-4 | tr '[:lower:]' '[:upper:]')
+    MAC_LAST4=$(echo "$MAC" | awk -F: '{print toupper($1 $2)}')
 else
     MAC_LAST4="XXXX"
 fi
 
-# 生成新的 SSID，格式为“设备型号+_MAC后四位”
+# 生成新的 SSID，格式为“设备型号+_MAC前四位”
 NEW_SSID="${DEVICE_MODEL}_${MAC_LAST4}"
 
 # 设置系统主机名为设备型号
