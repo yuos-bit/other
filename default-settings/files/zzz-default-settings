@@ -33,12 +33,6 @@ uci set dhcp.lan.ra='server'
 uci set dhcp.lan.dhcpv6='server'
 uci set dhcp.lan.ra_management='1'
 uci set dhcp.lan.ra_default='1'
-#uci set dhcp.@dnsmasq[0].localservice=0
-#uci set dhcp.@dnsmasq[0].nonwildcard=0
-uci delete dhcp.lan.ra
-uci delete dhcp.lan.dhcpv6
-uci delete dhcp.lan.ndp
-
 uci set dhcp.lan.start='2'
 # 设置 IP 地址池起始地址
 uci set dhcp.lan.limit='50'
@@ -54,7 +48,6 @@ uci set network.lan.gateway='10.32.0.1'
 uci set network.lan.dns='223.5.5.5 119.29.29.29 8.8.8.8'
 uci set network.lan.ip6assign='64'
 uci set network.lan.ifname='eth0'
-
 uci commit network
 
 # 参考: https://github.com/morrownr/USB-WiFi/discussions/145
@@ -62,7 +55,6 @@ uci commit network
 
 uci set network.wan
 uci set network.wan.ifname='wan'
-
 uci set network.wan6
 uci set network.wan6.ifname='wan'
 uci set network.wan6.reqaddress='try'
