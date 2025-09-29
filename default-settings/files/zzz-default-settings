@@ -27,12 +27,13 @@ sed -i 's#downloads.openwrt.org#mirrors.cloud.tencent.com/lede#g' /etc/opkg/dist
 # 设置默认密码admin
 sed -i 's/root::0:0:99999:7:::/root:$1$wEehtjxj$YBu4quNfVUjzfv8p\/PBo5.:0:0:99999:7:::/g' /etc/shadow
 sed -i 's/root:::0:99999:7:::/root:$1$wEehtjxj$YBu4quNfVUjzfv8p\/PBo5.:0:0:99999:7:::/g' /etc/shadow
+
 # 设置DHCP
-uci set dhcp.lan.ra='server'
-uci set dhcp.lan.dhcpv6='server'
-uci set dhcp.lan.ra_management='1'
-uci set dhcp.lan.ra_default='1'
-uci commit dhcp
+# uci set dhcp.lan.ra='server'
+# uci set dhcp.lan.dhcpv6='server'
+# uci set dhcp.lan.ra_management='1'
+# uci set dhcp.lan.ra_default='1'
+# uci commit dhcp
 
 uci set network.lan.ipaddr='10.32.0.1'
 uci set network.lan.netmask='255.255.255.0'
@@ -68,30 +69,6 @@ uci set system.@system[0].hostname="${DEVICE_MODEL}"
 uci commit system
 
 ##########################################
-# 设置无线配置（动态 SSID）
-# 2.4G 无线
-# uci set wireless.default_radio0
-# uci set wireless.default_radio0.ssid="${NEW_SSID}"
-# uci set wireless.default_radio0.encryption='psk2'
-# uci set wireless.default_radio0.key='1234567890'
-
-# 5G 无线：在 SSID 后增加 -5G
-# uci set wireless.default_radio1
-# uci set wireless.default_radio1.ssid="${NEW_SSID}-5G"
-# uci set wireless.default_radio1.encryption='psk2'
-# uci set wireless.default_radio1.key='1234567890'
-
-# uci commit wireless
-# 设置硬件加速
-# uci set turboacc.global.set='1'
-# uci set turboacc.config.fullcone='1'
-# uci set turboacc.config.fastpath='mediatek_hnat'
-# uci set turboacc.config.fastpath_mh_eth_hnat='1'
-# uci set turboacc.config.fastpath_mh_eth_hnat_v6='1'
-# uci set turboacc.config.fastpath_mh_eth_hnat_macvlan='1'
-# uci set turboacc.config.fastpath_mh_eth_hnat_ppenum='1'
-# uci set turboacc.config.tcpcca='cubic'
-
 sed -i '/option disabled/d' /etc/config/wireless
 sed -i '/set wireless.radio${devidx}.disabled/d' /lib/wifi/mac80211.sh
 wifi up
