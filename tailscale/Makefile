@@ -25,8 +25,6 @@ PKG_BUILD_DIR:=$(BUILD_DIR)/tailscale-$(PKG_VERSION)
 PKG_BUILD_DEPENDS:=golang/host
 PKG_BUILD_PARALLEL:=1
 PKG_BUILD_FLAGS:=no-mips16
-# 强制禁用 cgo
-GO_PKG_TARGET_VARS += CGO_ENABLED=0
 
 GO_PKG:=\
 	tailscale.com/cmd/tailscaled
