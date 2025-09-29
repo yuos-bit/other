@@ -31,11 +31,11 @@ sed -i 's/root::0:0:99999:7:::/root:$1$wEehtjxj$YBu4quNfVUjzfv8p\/PBo5.:0:0:9999
 sed -i 's/root:::0:99999:7:::/root:$1$wEehtjxj$YBu4quNfVUjzfv8p\/PBo5.:0:0:99999:7:::/g' /etc/shadow
 
 # 设置DHCP
-uci set dhcp.lan.ra='server'
-uci set dhcp.lan.dhcpv6='server'
-uci set dhcp.lan.ra_management='1'
-uci set dhcp.lan.ra_default='1'
-uci commit dhcp
+#uci set dhcp.lan.ra='server'
+#uci set dhcp.lan.dhcpv6='server'
+#uci set dhcp.lan.ra_management='1'
+#uci set dhcp.lan.ra_default='1'
+#uci commit dhcp
 
 uci set network.lan.ipaddr='10.32.0.1'
 uci set network.lan.netmask='255.255.255.0'
