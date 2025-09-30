@@ -8,7 +8,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=default-settings
 PKG_VERSION:=1.1
-PKG_RELEASE:=51
+PKG_RELEASE:=52
 PKG_LICENSE:=GPLv3
 PKG_LICENSE_FILES:=LICENSE
 
@@ -21,7 +21,7 @@ define Package/default-settings
   CATEGORY:=LuCI
   TITLE:=LuCI support for Default Settings
   PKGARCH:=all
-  DEPENDS:=+luci-base +@LUCI_LANG_zh_Hans
+  DEPENDS:=+luci-base +@LUCI_LANG_zh-cn
 endef
 
 define Package/default-settings/description
