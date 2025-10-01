@@ -82,6 +82,10 @@ NEW_SSID="${DEVICE_MODEL}_${MAC_LAST4}"
 uci set system.@system[0].hostname="${DEVICE_MODEL}"
 uci commit system
 
+###########################################
+# 以下二选一
+## 一
+#------------------------------------#
 # 红米AC2100 闭源无线驱动 修改 2.4G
 sed -i 's/^SSID1=.*/SSID1='"${NEW_SSID}"'/' /etc/wireless/mt7615/mt7615.1.dat
 sed -i 's/^WPAPSK1=.*/WPAPSK1=1234567890/' /etc/wireless/mt7615/mt7615.1.dat
@@ -94,11 +98,19 @@ sed -i 's/^WPAPSK1=.*/WPAPSK1=1234567890/' /etc/wireless/mt7615/mt7615.2.dat
 sed -i 's/^AuthMode=.*/AuthMode=WPAPSKWPA2PSK/' /etc/wireless/mt7615/mt7615.2.dat
 sed -i 's/^EncrypType=.*/EncrypType=TKIPAES/' /etc/wireless/mt7615/mt7615.2.dat
 
-###########################################
-
-sed -i '/option disabled/d' /etc/config/wireless
-sed -i '/set wireless.radio${devidx}.disabled/d' /lib/wifi/mac80211.sh
-wifi up
+# WiFi接口重新生效（闭源驱动方式）
+ifconfig ra0 down
+ifconfig rai0 down
+sleep 2
+ifconfig ra0 up
+ifconfig rai0 up
+#-------------------------------------#
+## 二
+# 开源驱动
+# sed -i '/option disabled/d' /etc/config/wireless
+# sed -i '/set wireless.radio${devidx}.disabled/d' /lib/wifi/mac80211.sh
+# wifi up
+################################################
 
 # 删除状态页不需显示的
 rm -rf /usr/lib/lua/luci/view/admin_status/index
