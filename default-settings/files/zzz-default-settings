@@ -81,6 +81,19 @@ NEW_SSID="${DEVICE_MODEL}_${MAC_LAST4}"
 # 设置系统主机名为设备型号
 uci set system.@system[0].hostname="${DEVICE_MODEL}"
 uci commit system
+
+# 红米AC2100 闭源无线驱动 修改 2.4G
+sed -i 's/^SSID1=.*/SSID1='"${NEW_SSID}"'/' /etc/wireless/mt7615/mt7615.1.dat
+sed -i 's/^WPAPSK1=.*/WPAPSK1=1234567890/' /etc/wireless/mt7615/mt7615.1.dat
+sed -i 's/^AuthMode=.*/AuthMode=WPAPSKWPA2PSK/' /etc/wireless/mt7615/mt7615.1.dat
+sed -i 's/^EncrypType=.*/EncrypType=TKIPAES/' /etc/wireless/mt7615/mt7615.1.dat
+
+# 红米AC2100 闭源无线驱动 修改 5G
+sed -i 's/^SSID1=.*/SSID1='"${NEW_SSID}-5G"'/' /etc/wireless/mt7615/mt7615.2.dat
+sed -i 's/^WPAPSK1=.*/WPAPSK1=1234567890/' /etc/wireless/mt7615/mt7615.2.dat
+sed -i 's/^AuthMode=.*/AuthMode=WPAPSKWPA2PSK/' /etc/wireless/mt7615/mt7615.2.dat
+sed -i 's/^EncrypType=.*/EncrypType=TKIPAES/' /etc/wireless/mt7615/mt7615.2.dat
+
 ###########################################
 
 sed -i '/option disabled/d' /etc/config/wireless
