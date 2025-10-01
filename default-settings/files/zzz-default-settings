@@ -71,7 +71,7 @@ DEVICE_MODEL=$(cat /tmp/sysinfo/model 2>/dev/null)
 uci set system.@system[0].hostname="${DEVICE_MODEL}"
 uci commit system
 
-# 只取前两个单词
+# 精简设备名用于wifi名称生成
 DEVICE_MODEL=$(echo "$DEVICE_MODEL" | awk '{print $1,$2}')
 
 # 获取无线网口 MAC 地址（这里假设无线接口为 wlan0，根据实际情况调整）
