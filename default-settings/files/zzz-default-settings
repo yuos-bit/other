@@ -44,6 +44,24 @@ uci set network.lan.dns='223.5.5.5 119.29.29.29 8.8.8.8'
 uci set network.lan.ip6assign='64'
 uci commit network
 
+############################################
+# 参考: https://github.com/morrownr/USB-WiFi/discussions/145
+# 解决接口报错不受支持的协议问题
+uci set network.wan
+uci set network.wan.ifname='wan'
+uci set network.wan6
+uci set network.wan6.ifname='wan'
+uci set network.wan6.reqaddress='try'
+uci set network.wan6.reqprefix='auto'
+
+# 设置红米AC2100 LED状态灯
+uci set system.led_wan
+uci set system.led_wan.default='1'
+uci set system.led_wan.dev='wan'
+uci set system.led_wan.mode='link tx rx'
+uci set system.led_wan.trigger='netdev'
+###########################################
+
 sed -i '/option disabled/d' /etc/config/wireless
 sed -i '/set wireless.radio${devidx}.disabled/d' /lib/wifi/mac80211.sh
 wifi up
