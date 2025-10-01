@@ -67,6 +67,13 @@ uci set system.led_wan.trigger='netdev'
 DEVICE_MODEL=$(cat /tmp/sysinfo/model 2>/dev/null)
 [ -z "$DEVICE_MODEL" ] && DEVICE_MODEL="OpenWrt"  # 若获取失败则使用默认值
 
+# 设置系统主机名为设备型号
+uci set system.@system[0].hostname="${DEVICE_MODEL}"
+uci commit system
+
+# 只取前两个单词
+DEVICE_MODEL=$(echo "$DEVICE_MODEL" | awk '{print $1,$2}')
+
 # 获取无线网口 MAC 地址（这里假设无线接口为 wlan0，根据实际情况调整）
 MAC=$(cat /sys/class/net/eth0/address 2>/dev/null)
 if [ -n "$MAC" ]; then
@@ -78,9 +85,7 @@ fi
 # 生成新的 SSID，格式为“设备型号+_MAC前四位”
 NEW_SSID="${DEVICE_MODEL}_${MAC_LAST4}"
 
-# 设置系统主机名为设备型号
-uci set system.@system[0].hostname="${DEVICE_MODEL}"
-uci commit system
+
 
 ###########################################
 # 以下二选一
