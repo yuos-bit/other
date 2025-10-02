@@ -70,7 +70,7 @@ DEVICE_MODEL=$(cat /tmp/sysinfo/model 2>/dev/null)
 [ -z "$DEVICE_MODEL" ] && DEVICE_MODEL="OpenWrt"  
 # 若获取失败则使用默认值
 
-# 设置系统主机名为设备型号
+# 设置设备型号为系统主机名
 uci set system.@system[0].hostname="${DEVICE_MODEL}"
 uci commit system
 
