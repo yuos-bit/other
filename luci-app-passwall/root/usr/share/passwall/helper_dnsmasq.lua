@@ -184,6 +184,7 @@ function add_rule(var)
 
 	local list1 = {}
 	local excluded_domain = {}
+	local excluded_domain_str = "!"
 
 	local function log(...)
 		if NO_LOGIC_LOG == "1" then
@@ -282,6 +283,7 @@ function add_rule(var)
 			return
 		end
 		table.insert(excluded_domain, domain)
+		excluded_domain_str = excluded_domain_str .. "|" .. domain
 	end
 
 	local function check_excluded_domain(domain)
@@ -289,7 +291,7 @@ function add_rule(var)
 			return false
 		end
 		for k,v in ipairs(excluded_domain) do
-			if domain == v or domain:sub(-#("."..v)) == "."..v then
+			if domain:find(v) then
 				return true
 			end
 		end
@@ -345,7 +347,7 @@ function add_rule(var)
 			if USE_BLOCK_LIST == "1" then
 				for line in io.lines("/usr/share/passwall/rules/block_host") do
 					line = api.get_std_domain(line)
-					if line ~= "" and not line:find("#") and not line:find(":") then
+					if line ~= "" and not line:find("#") then
 						set_domain_address(line, "")
 					end
 				end
@@ -395,7 +397,7 @@ function add_rule(var)
 					--始终用国内DNS解析直连（白名单）列表
 					for line in io.lines("/usr/share/passwall/rules/direct_host") do
 						line = api.get_std_domain(line)
-						if line ~= "" and not line:find("#") and not line:find(":") then
+						if line ~= "" and not line:find("#") then
 							add_excluded_domain(line)
 							set_domain_dns(line, fwd_dns)
 							set_domain_ipset(line, table.concat(sets, ","))
@@ -432,7 +434,7 @@ function add_rule(var)
 					--始终使用远程DNS解析代理（黑名单）列表
 					for line in io.lines("/usr/share/passwall/rules/proxy_host") do
 						line = api.get_std_domain(line)
-						if line ~= "" and not line:find("#") and not line:find(":") then
+						if line ~= "" and not line:find("#") then
 							add_excluded_domain(line)
 							if NO_PROXY_IPV6 == "1" then
 								set_domain_address(line, "::")
@@ -469,8 +471,9 @@ function add_rule(var)
 					if REMOTE_FAKEDNS == "1" then
 						sets = {}
 					end
-					for line in io.lines("/usr/share/passwall/rules/gfwlist") do
-						if line ~= "" and not line:find("#") and not check_excluded_domain(line) then
+					local gfwlist_str = sys.exec('cat /usr/share/passwall/rules/gfwlist | grep -v -E "^#" | grep -v -E "' .. excluded_domain_str .. '"')
+					for line in string.gmatch(gfwlist_str, "[^\r\n]+") do
+						if line ~= "" then
 							if NO_PROXY_IPV6 == "1" then
 								set_domain_address(line, "::")
 							end
@@ -515,8 +518,9 @@ function add_rule(var)
 							sets = {}
 						end
 					end
-					for line in io.lines("/usr/share/passwall/rules/chnlist") do
-						if line ~= "" and not line:find("#") and not check_excluded_domain(line) then
+					local chnlist_str = sys.exec('cat /usr/share/passwall/rules/chnlist | grep -v -E "^#" | grep -v -E "' .. excluded_domain_str .. '"')
+					for line in string.gmatch(chnlist_str, "[^\r\n]+") do
+						if line ~= "" then
 							if CHN_LIST == "proxy" and NO_PROXY_IPV6 == "1" then
 								set_domain_address(line, "::")
 							end
@@ -668,10 +672,6 @@ function add_rule(var)
 		if LISTEN_PORT then
 			--Copy dnsmasq instance
 			conf_lines = copy_instance({["-LISTEN_PORT"] = LISTEN_PORT, ["-TMP_DNSMASQ_PATH"] = TMP_DNSMASQ_PATH, ["-return"] = "1"})
-			--dhcp.leases to hosts
-			local hosts = "/tmp/etc/" .. appname .. "_tmp/dhcp-hosts"
-			sys.call("touch " .. hosts)
-			tinsert(conf_lines, "addn-hosts=" .. hosts)
 		else
 			--Modify the default dnsmasq service
 		end

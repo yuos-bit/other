@@ -48,10 +48,6 @@ function set_apply_on_parse(map)
 			showMsg_Redirect(self.redirect, 3000)
 		end
 	end
-	map.render = function(self, ...)
-		getmetatable(self).__index.render(self, ...) -- 保持原渲染流程
-		optimize_cbi_ui()
-	end
 end
 
 function showMsg_Redirect(redirectUrl, delay)
@@ -126,8 +122,7 @@ function uci_save(cursor, config, commit, apply)
 end
 
 function sh_uci_get(config, section, option)
-	local _, val = exec_call(string.format("uci -q get %s.%s.%s", config, section, option))
-	return val
+	exec_call(string.format("uci -q get %s.%s.%s", config, section, option))
 end
 
 function sh_uci_set(config, section, option, val, commit)
@@ -193,11 +188,6 @@ function base64Decode(text)
 	else
 		return raw
 	end
-end
-
-function base64Encode(text)
-	local result = nixio.bin.b64encode(text)
-	return result
 end
 
 --提取URL中的域名和端口(no ip)
@@ -269,16 +259,11 @@ function curl_direct(url, file, args)
 end
 
 function curl_auto(url, file, args)
-	local localhost_proxy = uci:get(appname, "@global[0]", "localhost_proxy") or "1"
-	if localhost_proxy == "1" then
-		return curl_base(url, file, args) -- 当路由器本机开启代理时，采用passwall规则进行访问
-	else
-		local return_code, result = curl_proxy(url, file, args)
-		if not return_code or return_code ~= 0 then
-			return_code, result = curl_direct(url, file, args)
-		end
-		return return_code, result
+	local return_code, result = curl_proxy(url, file, args)
+	if not return_code or return_code ~= 0 then
+		return_code, result = curl_direct(url, file, args)
 	end
+	return return_code, result
 end
 
 function url(...)
@@ -292,9 +277,8 @@ function url(...)
 	return require "luci.dispatcher".build_url(url)
 end
 
-function trim(text)
-	if not text or text == "" then return "" end
-	return text:match("^%s*(.-)%s*$")
+function trim(s)
+	return (s:gsub("^%s*(.-)%s*$", "%1"))
 end
 
 -- 分割字符串
@@ -429,18 +413,6 @@ function is_ipv6(val)
 	return false
 end
 
-function is_local_ip(ip)
-	ip = tostring(ip or ""):lower()
-	ip = ip:gsub("^[%w%d]+://", "")   -- 去掉协议头
-		:gsub("/.*$", "")          -- 去掉路径
-		:gsub("^%[", ""):gsub("%]$", "") -- 去掉IPv6方括号
-		:gsub(":%d+$", "")         -- 去掉端口
-	return ip:match("^127%.") or ip:match("^10%.") or
-		ip:match("^172%.1[6-9]%.") or ip:match("^172%.2[0-9]%.") or
-		ip:match("^172%.3[0-1]%.") or ip:match("^192%.168%.") or
-		ip == "::1" or ip:match("^f[cd]") or ip:match("^fe[89ab]")
-end
-
 function is_ipv6addrport(val)
 	if is_ipv6(val) then
 		local address, port = val:match('%[(.*)%]:([^:]+)$')
@@ -522,16 +494,14 @@ function get_valid_nodes()
 	uci:foreach(appname, "nodes", function(e)
 		e.id = e[".name"]
 		if e.type and e.remarks then
-			if (e.type == "sing-box" or e.type == "Xray") and e.protocol and
-			   (e.protocol == "_balancing" or e.protocol == "_shunt" or e.protocol == "_iface" or e.protocol == "_urltest") then
+			if e.protocol and (e.protocol == "_balancing" or e.protocol == "_shunt" or e.protocol == "_iface" or e.protocol == "_urltest") then
 				local type = e.type
 				if type == "sing-box" then type = "Sing-Box" end
 				e["remark"] = "%s：[%s] " % {type .. " " .. i18n.translatef(e.protocol), e.remarks}
 				e["node_type"] = "special"
 				nodes[#nodes + 1] = e
 			end
-			local port = e.port or e.hysteria_hop or e.hysteria2_hop
-			if port and e.address then
+			if e.port and e.address then
 				local address = e.address
 				if is_ip(address) or datatypes.hostname(address) then
 					local type = e.type
@@ -551,10 +521,6 @@ function get_valid_nodes()
 							protocol = "HY"
 						elseif protocol == "hysteria2" then
 							protocol = "HY2"
-						elseif protocol == "anytls" then
-							protocol = "AnyTLS"
-						elseif protocol == "ssh" then
-							protocol = "SSH"
 						else
 							protocol = protocol:gsub("^%l",string.upper)
 						end
@@ -564,8 +530,7 @@ function get_valid_nodes()
 					if is_ipv6(address) then address = get_ipv6_full(address) end
 					e["remark"] = "%s：[%s]" % {type, e.remarks}
 					if show_node_info == "1" then
-						port = port:gsub(":", "-")
-						e["remark"] = "%s：[%s] %s:%s" % {type, e.remarks, address, port}
+						e["remark"] = "%s：[%s] %s:%s" % {type, e.remarks, address, e.port}
 					end
 					e.node_type = "normal"
 					nodes[#nodes + 1] = e
@@ -579,8 +544,7 @@ end
 function get_node_remarks(n)
 	local remarks = ""
 	if n then
-		if (n.type == "sing-box" or n.type == "Xray") and n.protocol and
-		   (n.protocol == "_balancing" or n.protocol == "_shunt" or n.protocol == "_iface" or n.protocol == "_urltest") then
+		if n.protocol and (n.protocol == "_balancing" or n.protocol == "_shunt" or n.protocol == "_iface" or n.protocol == "_urltest") then
 			remarks = "%s：[%s] " % {n.type .. " " .. i18n.translatef(n.protocol), n.remarks}
 		else
 			local type2 = n.type
@@ -590,24 +554,9 @@ function get_node_remarks(n)
 					protocol = "VMess"
 				elseif protocol == "vless" then
 					protocol = "VLESS"
-				elseif protocol == "shadowsocks" then
-					protocol = "SS"
-				elseif protocol == "shadowsocksr" then
-					protocol = "SSR"
-				elseif protocol == "wireguard" then
-					protocol = "WG"
-				elseif protocol == "hysteria" then
-					protocol = "HY"
-				elseif protocol == "hysteria2" then
-					protocol = "HY2"
-				elseif protocol == "anytls" then
-					protocol = "AnyTLS"
-				elseif protocol == "ssh" then
-					protocol = "SSH"
 				else
 					protocol = protocol:gsub("^%l",string.upper)
 				end
-				if type2 == "sing-box" then type2 = "Sing-Box" end
 				type2 = type2 .. " " .. protocol
 			end
 			remarks = "%s：[%s]" % {type2, n.remarks}
@@ -619,10 +568,8 @@ end
 function get_full_node_remarks(n)
 	local remarks = get_node_remarks(n)
 	if #remarks > 0 then
-		local port = n.port or n.hysteria_hop or n.hysteria2_hop
-		if n.address and port then
-			port = port:gsub(":", "-")
-			remarks = remarks .. " " .. n.address .. ":" .. port
+		if n.address and n.port then
+			remarks = remarks .. " " .. n.address .. ":" .. n.port
 		end
 	end
 	return remarks
@@ -897,7 +844,7 @@ local function auto_get_arch()
 		arch = "rockchip"
 	end
 
-	return trim(arch)
+	return util.trim(arch)
 end
 
 function parseURL(url)
@@ -950,8 +897,7 @@ local default_file_tree = {
 	armv5   = "arm.*5",
 	armv6   = "arm.*6[^4]*",
 	armv7   = "arm.*7",
-	armv8   = "arm64",
-	riscv64 = "riscv64"
+	armv8   = "arm64"
 }
 
 local function get_api_json(url)
@@ -1061,7 +1007,7 @@ function to_download(app_name, url, size)
 
 	sys.call("/bin/rm -f /tmp/".. app_name .."_download.*")
 
-	local tmp_file = trim(util.exec("mktemp -u -t ".. app_name .."_download.XXXXXX"))
+	local tmp_file = util.trim(util.exec("mktemp -u -t ".. app_name .."_download.XXXXXX"))
 
 	if size then
 		local kb1 = get_free_space("/tmp")
@@ -1071,7 +1017,7 @@ function to_download(app_name, url, size)
 	end
 
 	local _curl_args = clone(curl_args)
-	table.insert(_curl_args, "--speed-limit 51200 --speed-time 15 --max-time 300")
+	table.insert(_curl_args, "-m 60")
 
 	local return_code, result = curl_auto(url, tmp_file, _curl_args)
 	result = return_code == 0
@@ -1124,7 +1070,7 @@ function to_extract(app_name, file, subfix)
 		return {code = 1, error = i18n.translatef("%s not enough space.", "/tmp")}
 	end
 
-	local tmp_dir = trim(util.exec("mktemp -d -t ".. app_name .."_extract.XXXXXX"))
+	local tmp_dir = util.trim(util.exec("mktemp -d -t ".. app_name .."_extract.XXXXXX"))
 
 	local output = {}
 
@@ -1268,16 +1214,11 @@ function luci_types(id, m, s, type_name, option_prefix)
 				end
 
 				s.fields[key].cfgvalue = function(self, section)
-					-- 添加自定义 custom_cfgvalue 属性，如果有自定义的 custom_cfgvalue 函数，则使用自定义的 cfgvalue 逻辑
-					if self.custom_cfgvalue then
-						return self:custom_cfgvalue(section)
+					if self.rewrite_option then
+						return m:get(section, self.rewrite_option)
 					else
-						if self.rewrite_option then
-							return m:get(section, self.rewrite_option)
-						else
-							if self.option:find(option_prefix) == 1 then
-								return m:get(section, self.option:sub(1 + #option_prefix))
-							end
+						if self.option:find(option_prefix) == 1 then
+							return m:get(section, self.option:sub(1 + #option_prefix))
 						end
 					end
 				end
@@ -1346,58 +1287,4 @@ function get_std_domain(domain)
 		end
 	end
 	return domain
-end
-
-function format_go_time(input)
-	input = input and trim(input)
-	local N = 0
-	if input and input:match("^%d+$") then
-		N = tonumber(input)
-	elseif input and input ~= "" then
-		for value, unit in input:gmatch("(%d+)%s*([hms])") do
-			value = tonumber(value)
-			if unit == "h" then
-				N = N + value * 3600
-			elseif unit == "m" then
-				N = N + value * 60
-			elseif unit == "s" then
-				N = N + value
-			end
-		end
-	end
-	if N <= 0 then
-		return "0s"
-	end
-	local result = ""
-	local h = math.floor(N / 3600)
-	local m = math.floor(N % 3600 / 60)
-	local s = N % 60
-	if h > 0 then result = result .. h .. "h" end
-	if m > 0 then result = result .. m .. "m" end
-	if s > 0 or result == "" then result = result .. s .. "s" end
-	return result
-end
-
-function optimize_cbi_ui()
-	luci.http.write([[
-		<script type="text/javascript">
-			//修正上移、下移按钮名称
-			document.querySelectorAll("input.btn.cbi-button.cbi-button-up").forEach(function(btn) {
-				btn.value = "]] .. i18n.translate("Move up") .. [[";
-			});
-			document.querySelectorAll("input.btn.cbi-button.cbi-button-down").forEach(function(btn) {
-				btn.value = "]] .. i18n.translate("Move down") .. [[";
-			});
-			//删除控件和说明之间的多余换行
-			document.querySelectorAll("div.cbi-value-description").forEach(function(descDiv) {
-				var prev = descDiv.previousSibling;
-				while (prev && prev.nodeType === Node.TEXT_NODE && prev.textContent.trim() === "") {
-					prev = prev.previousSibling;
-				}
-				if (prev && prev.nodeType === Node.ELEMENT_NODE && prev.tagName === "BR") {
-					prev.remove();
-				}
-			});
-		</script>
-	]])
 end
