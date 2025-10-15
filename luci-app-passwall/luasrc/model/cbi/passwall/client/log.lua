@@ -1,5 +1,5 @@
 local api = require "luci.passwall.api"
-local appname = "passwall"
+local appname = api.appname
 
 f = SimpleForm(appname)
 f.reset = false

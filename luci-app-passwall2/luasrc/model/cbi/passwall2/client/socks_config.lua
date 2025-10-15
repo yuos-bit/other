@@ -1,15 +1,11 @@
 local api = require "luci.passwall2.api"
 local appname = api.appname
+local uci = api.uci
+local has_singbox = api.finded_com("singbox")
+local has_xray = api.finded_com("xray")
 
 m = Map(appname)
 api.set_apply_on_parse(m)
-
-if not arg[1] or not m:get(arg[1]) then
-	luci.http.redirect(api.url())
-end
-
-local has_singbox = api.finded_com("sing-box")
-local has_xray = api.finded_com("xray")
 
 local nodes_table = {}
 for k, e in ipairs(api.get_valid_nodes()) do
@@ -26,9 +22,10 @@ o.default = 1
 o.rmempty = false
 
 local auto_switch_tip
-local current_node = api.get_cache_var("socks_" .. arg[1])
-if current_node then
-	local n = m:get(current_node)
+local current_node_file = string.format("/tmp/etc/%s/id/socks_%s", appname, arg[1])
+local current_node = luci.sys.exec(string.format("[ -f '%s' ] && echo -n $(cat %s)", current_node_file, current_node_file))
+if current_node and current_node ~= "" and current_node ~= "nil" then
+	local n = uci:get_all(appname, current_node)
 	if n then
 		if tonumber(m:get(arg[1], "enable_autoswitch") or 0) == 1 then
 			if n then
@@ -45,11 +42,8 @@ if auto_switch_tip then
 	socks_node.description = auto_switch_tip
 end
 
-o = s:option(Flag, "bind_local", translate("Bind Local"), translate("When selected, it can only be accessed localhost."))
-o.default = "0"
-
 local n = 1
-m.uci:foreach(appname, "socks", function(s)
+uci:foreach(appname, "socks", function(s)
 	if s[".name"] == section then
 		return false
 	end
@@ -66,10 +60,6 @@ if has_singbox or has_xray then
 	o.default = 0
 	o.datatype = "port"
 end
-
-o = s:option(Flag, "log", translate("Enable") .. " " .. translate("Log"))
-o.default = 1
-o.rmempty = false
 
 o = s:option(Flag, "enable_autoswitch", translate("Auto Switch"))
 o.default = 0
@@ -123,8 +113,6 @@ for k, v in pairs(nodes_table) do
 	socks_node:value(v.id, v["remark"])
 end
 
-o = s:option(DummyValue, "btn", " ")
-o.template = appname .. "/socks_auto_switch/btn"
-o:depends("enable_autoswitch", true)
+m:append(Template(appname .. "/socks_auto_switch/footer"))
 
 return m

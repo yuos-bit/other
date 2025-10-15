@@ -1,13 +1,16 @@
 local api = require "luci.passwall2.api"
 local appname = api.appname
+local uci = api.uci
+local fs = require "nixio.fs"
+local types_dir = "/usr/lib/lua/luci/model/cbi/passwall2/client/type/"
+
+if not arg[1] or not uci:get(appname, arg[1]) then
+	luci.http.redirect(api.url("node_list"))
+end
 
 m = Map(appname, translate("Node Config"))
 m.redirect = api.url()
 api.set_apply_on_parse(m)
-
-if not arg[1] or not m:get(arg[1]) then
-	luci.http.redirect(api.url("node_list"))
-end
 
 s = m:section(NamedSection, arg[1], "nodes", "")
 s.addremove = false
@@ -21,9 +24,6 @@ o.value = arg[1]
 o = s:option(Value, "remarks", translate("Node Remarks"))
 o.default = translate("Remarks")
 o.rmempty = false
-
-local fs = require "nixio.fs"
-local types_dir = "/usr/lib/lua/luci/model/cbi/passwall2/client/type/"
 
 o = s:option(ListValue, "type", translate("Type"))
 
