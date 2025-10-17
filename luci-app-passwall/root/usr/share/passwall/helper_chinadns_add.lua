@@ -88,7 +88,7 @@ local function insert_array_after(array1, array2, target) --将array2插入到ar
 end
 
 local function get_geosite(list_arg, out_path)
-	local geosite_path = uci:get(appname, "@global_rules[0]", "v2ray_location_asset")
+	local geosite_path = uci:get(appname, "@global_rules[0]", "v2ray_location_asset") or "/usr/share/v2ray/"
 	geosite_path = geosite_path:match("^(.*)/") .. "/geosite.dat"
 	if not is_file_nonzero(geosite_path) then return 1 end
 	if api.is_finded("geoview") and list_arg and out_path then
@@ -106,13 +106,15 @@ local setflag = (NFTFLAG == "1") and "inet@passwall@" or ""
 
 local only_global = (DEFAULT_MODE == "proxy" and CHNLIST == "0" and GFWLIST == "0") and 1
 
+local force_https_soa = uci:get(appname, "@global[0]", "force_https_soa") or 1
+
 config_lines = {
 	LOG_FILE ~= "/dev/null" and "verbose" or "",
-	"bind-addr 127.0.0.1",
+	"bind-addr ::",
 	"bind-port " .. LISTEN_PORT,
 	"china-dns " .. DNS_LOCAL,
 	"trust-dns " .. DNS_TRUST,
-	"filter-qtype 65"
+	tonumber(force_https_soa) == 1 and "filter-qtype 65" or ""
 }
 
 for i = 1, 6 do
@@ -495,8 +497,6 @@ if DEFAULT_TAG == "none_noip" then table.insert(config_lines, "noip-as-chnip") e
 if DEFAULT_TAG == nil or DEFAULT_TAG == "smart" or DEFAULT_TAG == "none_noip" then DEFAULT_TAG = "none" end
 
 table.insert(config_lines, "default-tag " .. DEFAULT_TAG)
-table.insert(config_lines, "cache 4096")
-table.insert(config_lines, "cache-stale 3600")
 
 if DEFAULT_TAG == "none" then
 	table.insert(config_lines, "verdict-cache 5000")
