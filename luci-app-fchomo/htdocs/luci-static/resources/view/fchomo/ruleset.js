@@ -6,11 +6,38 @@
 
 'require fchomo as hm';
 
-function parseRulesetLink(uri) {
-	let config,
-		filefmt = new RegExp(/^(text|yaml|mrs)$/),
-		filebehav = new RegExp(/^(domain|ipcidr|classical)$/),
-		unuciname = new RegExp(/[^a-zA-Z0-9_]+/, "g");
+const parseRulesetYaml = hm.parseYaml.extend({
+	key_mapping(cfg) {
+		if (!cfg.type)
+			return null;
+
+		// key mapping // 2026/01/17
+		let config = hm.removeBlankAttrs({
+			id: this.id,
+			label: this.label,
+			type: cfg.type,
+			format: cfg.format,
+			behavior: cfg.behavior,
+			...(cfg.type === 'inline' ? {
+				payload: cfg.payload, // string: array
+			} : {
+				url: cfg.url,
+				size_limit: cfg["size-limit"],
+				interval: cfg.interval,
+				proxy: cfg.proxy ? hm.preset_outbound.full.map(([key, label]) => key).includes(cfg.proxy) ? cfg.proxy : this.calcID(hm.glossary["proxy_group"].field, cfg.proxy) : null,
+				header: cfg.header ? JSON.stringify(cfg.header, null, 2) : null, // string: object
+			})
+		});
+
+		return config;
+	}
+});
+
+function parseRulesetLink(section_type, uri) {
+	const filefmt = new RegExp(/^(text|yaml|mrs)$/);
+	const filebehav = new RegExp(/^(domain|ipcidr|classical)$/);
+
+	let config;
 
 	uri = uri.split('://');
 	if (uri[0] && uri[1]) {
@@ -22,8 +49,7 @@ function parseRulesetLink(uri) {
 			var behavior = url.searchParams.get('behav');
 			var interval = url.searchParams.get('sec');
 			var rawquery = url.searchParams.get('rawq');
-			var name = decodeURI(url.pathname).split('/').pop()
-				.replace(/[\s\.-]/g, '_').replace(unuciname, '');
+			var name = hm.toUciname(decodeURI(url.pathname).split('/').pop());
 
 			if (filefmt.test(format) && filebehav.test(behavior)) {
 				let fullpath = (url.username ? url.username + '@' : '') + url.host + url.pathname + (rawquery ? '?' + decodeURIComponent(rawquery) : '');
@@ -45,8 +71,7 @@ function parseRulesetLink(uri) {
 			var behavior = url.searchParams.get('behav');
 			var filler = url.searchParams.get('fill');
 			var path = decodeURI(url.pathname);
-			var name = path.split('/').pop()
-				.replace(/[\s\.-]/g, '_').replace(unuciname, '');
+			var name = hm.toUciname(path.split('/').pop());
 
 			if (filefmt.test(format) && filebehav.test(behavior)) {
 				config = {
@@ -56,7 +81,7 @@ function parseRulesetLink(uri) {
 					behavior: behavior,
 					id: hm.calcStringMD5(String.format('file://%s%s', url.host, url.pathname))
 				};
-				hm.writeFile('ruleset', config.id, hm.decodeBase64Str(filler));
+				hm.writeFile(section_type, config.id, hm.decodeBase64Str(filler));
 			}
 
 			break;
@@ -103,76 +128,110 @@ return view.extend({
 
 		/* Rule set START */
 		/* Rule set settings */
-		var prefmt = { 'prefix': 'rule_', 'suffix': '' };
-		s = m.section(form.GridSection, 'ruleset');
+		s = m.section(hm.GridSection, 'ruleset');
 		s.addremove = true;
 		s.rowcolors = true;
 		s.sortable = true;
 		s.nodescriptions = true;
-		s.modaltitle = L.bind(hm.loadModalTitle, s, _('Rule set'), _('Add a rule set'));
-		s.sectiontitle = L.bind(hm.loadDefaultLabel, s);
-		/* Import rule-set links and Remove idle files start */
+		s.hm_modaltitle = [ _('Rule set'), _('Add a rule set') ];
+		s.hm_prefmt = hm.glossary[s.sectiontype].prefmt;
+		s.hm_field  = hm.glossary[s.sectiontype].field;
+		s.hm_lowcase_only = false;
+		/* Import mihomo config and Import rule-set links and Remove idle files start */
+		s.handleYamlImport = function() {
+			const field = this.hm_field;
+			const o = new hm.HandleImport(this.map, this, _('Import mihomo config'),
+				_('Please type <code>%s</code> fields of mihomo config.</br>')
+					.format(field));
+			o.placeholder = 'rule-providers:\n' +
+							'  google:\n' +
+							'    type: http\n' +
+							'    path: ./rule1.yaml\n' +
+							'    url: "https://raw.githubusercontent.com/../Google.yaml"\n' +
+							'    interval: 600\n' +
+							'    proxy: DIRECT\n' +
+							'    behavior: classical\n' +
+							'    format: yaml\n' +
+							'    size-limit: 0\n' +
+							'  alidns:\n' +
+							'    type: file\n' +
+							'    path: ./rule2.yaml\n' +
+							'    behavior: classical\n' +
+							'  google2:\n' +
+							'    type: http\n' +
+							'    path: ./rule3.yaml\n' +
+							'    url: "https://raw.githubusercontent.com/../Google.yaml"\n' +
+							'    proxy: proxy\n' +
+							'    behavior: classical\n' +
+							'    header:\n' +
+							'      User-Agent:\n' +
+							'      - "mihomo/1.18.3"\n' +
+							'      Accept:\n' +
+							"      - 'application/vnd.github.v3.raw'\n" +
+							'      Authorization:\n' +
+							"      - 'token 1231231'\n" +
+							'  rule4:\n' +
+							'    type: inline\n' +
+							'    behavior: domain\n' +
+							'    payload:\n' +
+							"      - '.blogger.com'\n" +
+							"      - '*.*.microsoft.com'\n" +
+							"      - 'books.itunes.apple.com'\n" +
+							'  ...'
+			o.parseYaml = parseRulesetYaml;
+
+			return o.render();
+		}
 		s.handleLinkImport = function() {
-			let textarea = new ui.Textarea('', {
-				'placeholder': 'http(s)://github.com/ACL4SSR/ACL4SSR/raw/refs/heads/master/Clash/Providers/BanAD.yaml?fmt=yaml&behav=classical&rawq=good%3Djob#BanAD\n' +
-							   'file:///example.txt?fmt=text&behav=domain&fill=LmNuCg#CN%20TLD\n' +
-							   'inline://LSAnLmhrJwoK?behav=domain#HK%20TLD\n'
-			});
-			ui.showModal(_('Import rule-set links'), [
-				E('p', _('Supports rule-set links of type: <code>%s</code> and format: <code>%s</code>.</br>')
-						.format('file, http, inline', 'text, yaml, mrs') +
-							_('Please refer to <a href="%s" target="_blank">%s</a> for link format standards.')
-								.format(hm.rulesetdoc, _('Ruleset-URI-Scheme'))),
-				textarea.render(),
-				E('div', { class: 'right' }, [
-					E('button', {
-						class: 'btn',
-						click: ui.hideModal
-					}, [ _('Cancel') ]),
-					' ',
-					E('button', {
-						class: 'btn cbi-button-action',
-						click: ui.createHandlerFn(this, function() {
-							let input_links = textarea.getValue().trim().split('\n');
-							if (input_links && input_links[0]) {
-								/* Remove duplicate lines */
-								input_links = input_links.reduce((pre, cur) =>
-									(!pre.includes(cur) && pre.push(cur), pre), []);
+			const section_type = this.sectiontype;
+			const o = new hm.HandleImport(this.map, this, _('Import rule-set links'),
+				_('Supports rule-set links of type: <code>%s</code> and format: <code>%s</code>.</br>')
+					.format('file, http, inline', 'text, yaml, mrs') +
+					_('Please refer to <a href="%s" target="_blank">%s</a> for link format standards.')
+						.format(hm.rulesetdoc, _('Ruleset-URI-Scheme')));
+			o.placeholder = 'http(s)://github.com/ACL4SSR/ACL4SSR/raw/refs/heads/master/Clash/Providers/BanAD.yaml?fmt=yaml&behav=classical&rawq=good%3Djob#BanAD\n' +
+							'file:///example.txt?fmt=text&behav=domain&fill=LmNuCg#CN%20TLD\n' +
+							'inline://LSAnLmhrJwoK?behav=domain#HK%20TLD\n';
+			o.handleFn = function(textarea) {
+				let input_links = textarea.getValue().trim().split('\n');
+				let imported_count = 0;
 
-								let imported_ruleset = 0;
-								input_links.forEach((l) => {
-									let config = parseRulesetLink(l);
-									if (config) {
-										let sid = uci.add(data[0], 'ruleset', config.id);
-										config.id = null;
-										Object.keys(config).forEach((k) => {
-											uci.set(data[0], sid, k, config[k] || '');
-										});
-										imported_ruleset++;
-									}
-								});
+				if (input_links && input_links[0]) {
+					/* Remove duplicate lines */
+					input_links = input_links.reduce((pre, cur) =>
+						(!pre.includes(cur) && pre.push(cur), pre), []);
 
-								if (imported_ruleset === 0)
-									ui.addNotification(null, E('p', _('No valid rule-set link found.')));
-								else
-									ui.addNotification(null, E('p', _('Successfully imported %s rule-set of total %s.').format(
-										imported_ruleset, input_links.length)));
+					input_links.forEach((l) => {
+						let config = parseRulesetLink(section_type, l);
+						if (config) {
+							this.write(config);
+							imported_count++;
+						}
+					});
 
-								return uci.save()
-									.then(L.bind(this.map.load, this.map))
-									.then(L.bind(this.map.reset, this.map))
-									.then(L.ui.hideModal)
-									.catch(() => {});
-							} else {
-								return ui.hideModal();
-							}
-						})
-					}, [ _('Import') ])
-				])
-			])
+					if (imported_count === 0)
+						ui.addNotification(null, E('p', _('No valid rule-set link found.')));
+					else
+						ui.addNotification(null, E('p', _('Successfully imported %s %s of total %s.')
+							.format(imported_count, _('rule-set'), input_links.length)), 'info');
+				}
+
+				if (imported_count)
+					return this.save();
+				else
+					return ui.hideModal();
+			}
+
+			return o.render();
 		}
 		s.renderSectionAdd = function(/* ... */) {
-			let el = hm.renderSectionAdd.apply(this, [prefmt, false].concat(Array.prototype.slice.call(arguments)));
+			let el = hm.GridSection.prototype.renderSectionAdd.apply(this, arguments);
+
+			el.appendChild(E('button', {
+				'class': 'cbi-button cbi-button-add',
+				'title': _('mihomo config'),
+				'click': ui.createHandlerFn(this, 'handleYamlImport')
+			}, [ _('Import mihomo config') ]));
 
 			el.appendChild(E('button', {
 				'class': 'cbi-button cbi-button-add',
@@ -188,17 +247,24 @@ return view.extend({
 
 			return el;
 		}
-		s.handleAdd = L.bind(hm.handleAdd, s, prefmt);
-		/* Import rule-set links and Remove idle files end */
+		/* Import mihomo config and Import rule-set links and Remove idle files end */
 
 		o = s.option(form.Value, 'label', _('Label'));
-		o.load = L.bind(hm.loadDefaultLabel, o);
-		o.validate = L.bind(hm.validateUniqueValue, o);
+		o.load = hm.loadDefaultLabel;
+		o.validate = hm.validateUniqueValue;
 		o.modalonly = true;
 
 		o = s.option(form.Flag, 'enabled', _('Enable'));
 		o.default = o.enabled;
 		o.editable = true;
+		o.validate = function(/* ... */) {
+			return hm.validatePresetIDs.call(this, [
+				['select', 'type'],
+				['select', 'behavior'],
+				['select', 'format'],
+				['textarea', '_editer']
+			], ...arguments);
+		}
 
 		o = s.option(form.ListValue, 'type', _('Type'));
 		o.value('file', _('Local'));
@@ -235,11 +301,11 @@ return view.extend({
 		}
 		o.textvalue = function(section_id) {
 			let cval = this.cfgvalue(section_id) || this.default;
-			let inline = L.bind(function() {
+			let inline = function() {
 				let cval = this.cfgvalue(section_id) || this.default;
 				return (cval === 'inline') ? true : false;
-			}, s.getOption('type'));
-			return inline() ? _('none') : cval;
+			}.call(s.getOption('type'));
+			return inline ? _('none') : cval;
 		};
 		o.depends({'type': 'inline', '!reverse': true});
 
@@ -249,7 +315,7 @@ return view.extend({
 
 			switch (option) {
 				case 'file':
-					return uci.get(data[0], section_id, '.name');
+					return `${hm.HM_DIR}/${this.section.sectiontype}/` + uci.get(data[0], section_id, '.name');
 				case 'http':
 					return uci.get(data[0], section_id, 'url');
 				case 'inline':
@@ -265,12 +331,24 @@ return view.extend({
 				.format('https://wiki.metacubex.one/config/rule-providers/content/', _('Contents')));
 		o.placeholder = _('Content will not be verified, Please make sure you enter it correctly.');
 		o.load = function(section_id) {
-			return L.resolveDefault(hm.readFile('ruleset', section_id), '');
+			const option = uci.get(data[0], section_id, 'type');
+
+			if (option === 'file')
+				return L.resolveDefault(hm.readFile(this.section.sectiontype, section_id), '');
 		}
-		o.write = L.bind(hm.writeFile, o, 'ruleset');
-		o.remove = L.bind(hm.writeFile, o, 'ruleset');
-		o.rmempty = false;
-		o.retain = true;
+		o.write = function(section_id, formvalue) {
+			const option = uci.get(data[0], section_id, 'type');
+
+			if (option === 'file')
+				return hm.writeFile.call(this, this.section.sectiontype, section_id, formvalue);
+		}
+		o.remove = function(section_id) {
+			const option = uci.get(data[0], section_id, 'type');
+			const cached_option = this.section.getOption('type').cfgvalue(section_id);
+
+			if (option === 'file' && cached_option === 'file')
+				return hm.writeFile.call(this, this.section.sectiontype, section_id);
+		}
 		o.depends({'type': 'file', 'format': /^(text|yaml)$/});
 		o.modalonly = true;
 
@@ -283,7 +361,7 @@ return view.extend({
 		o.modalonly = true;
 
 		o = s.option(form.Value, 'url', _('Rule set URL'));
-		o.validate = L.bind(hm.validateUrl, o);
+		o.validate = hm.validateUrl;
 		o.rmempty = false;
 		o.depends('type', 'http');
 		o.modalonly = true;
@@ -291,13 +369,13 @@ return view.extend({
 		o = s.option(form.Value, 'size_limit', _('Size limit'),
 			_('In bytes. <code>%s</code> will be used if empty.').format('0'));
 		o.placeholder = '0';
-		o.validate = L.bind(hm.validateBytesize, o);
+		o.validate = hm.validateBytesize;
 		o.depends('type', 'http');
 
 		o = s.option(form.Value, 'interval', _('Update interval'),
 			_('In seconds. <code>%s</code> will be used if empty.').format('259200'));
 		o.placeholder = '259200';
-		o.validate = L.bind(hm.validateTimeDuration, o);
+		o.validate = hm.validateTimeDuration;
 		o.depends('type', 'http');
 
 		o = s.option(form.ListValue, 'proxy', _('Proxy group'),
@@ -307,12 +385,19 @@ return view.extend({
 			o.value.apply(o, res);
 		})
 		o.load = L.bind(hm.loadProxyGroupLabel, o, hm.preset_outbound.direct);
-		o.textvalue = L.bind(hm.textvalue2Value, o);
+		o.textvalue = hm.textvalue2Value;
 		//o.editable = true;
 		o.depends('type', 'http');
 
+		o = s.option(hm.TextValue, 'header', _('HTTP header'),
+			_('Custom HTTP header.'));
+		o.placeholder = '{\n  "User-Agent": [\n    "mihomo/1.18.3"\n  ],\n  "Accept": [\n    //"application/vnd.github.v3.raw"\n  ],\n  "Authorization": [\n    //"token 1231231"\n  ]\n}';
+		o.validate = hm.validateJson;
+		o.depends('type', 'http');
+		o.modalonly = true;
+
 		o = s.option(form.DummyValue, '_update');
-		o.cfgvalue = L.bind(hm.renderResDownload, o);
+		o.cfgvalue = hm.renderResDownload;
 		o.editable = true;
 		o.modalonly = false;
 		/* Rule set END */

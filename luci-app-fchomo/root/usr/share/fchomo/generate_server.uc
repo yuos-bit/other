@@ -33,6 +33,23 @@ function parse_users(cfg) {
 
 	return users;
 }
+
+function parse_vless_encryption(payload, side) {
+	if (isEmpty(payload))
+		return null;
+
+	let content = json(trim(payload));
+
+	let required = join('.', [
+		content.method,
+		content.xormode,
+		side === 'server' ? content.ticket : side === 'client' ? content.rtt : null
+	]);
+
+	return required +
+		(isEmpty(content.paddings) ? '' : '.' + join('.', content.paddings)) + // Optional
+		(isEmpty(content.keypairs) ? '' : '.' + join('.', map(content.keypairs, e => e[side]))); // Required
+}
 /* Config helper END */
 
 /* Main */
@@ -49,9 +66,30 @@ uci.foreach(uciconf, uciserver, (cfg) => {
 		type: cfg.type,
 
 		listen: cfg.listen || '::',
-		port: strToInt(cfg.port),
+		port: cfg.port,
 		proxy: 'DIRECT',
-		udp: strToBool(cfg.udp),
+
+		/* HTTP / SOCKS / VMess / VLESS / Trojan / AnyTLS / Tuic / Hysteria2 */
+		users: (cfg.type in ['http', 'socks', 'mixed', 'vmess', 'vless', 'trojan']) ? [
+			{
+				/* HTTP / SOCKS */
+				username: cfg.username,
+				password: cfg.password,
+
+				/* VMess / VLESS */
+				uuid: cfg.vmess_uuid,
+				flow: cfg.vless_flow,
+				alterId: strToInt(cfg.vmess_alterid)
+			}
+			/*{
+			}*/
+		] : ((cfg.type in ['mieru', 'anytls', 'tuic', 'hysteria2']) ? {
+			/* Mieru / AnyTLS / Hysteria2 */
+			...arrToObj([[cfg.username, cfg.password]]),
+
+			/* Tuic */
+			...arrToObj([[cfg.uuid, cfg.password]])
+		} : null),
 
 		/* Hysteria2 */
 		up: strToInt(cfg.hysteria_up_mbps),
@@ -65,35 +103,65 @@ uci.foreach(uciconf, uciserver, (cfg) => {
 		cipher: cfg.shadowsocks_chipher,
 		password: cfg.shadowsocks_password,
 
+		/* Mieru */
+		transport: cfg.mieru_transport,
+
+		/* Sudoku */
+		key: cfg.sudoku_key,
+		"aead-method": replace(cfg.sudoku_aead_method || '', 'chacha20-ietf-poly1305', 'chacha20-poly1305') || null,
+		"padding-min": strToInt(cfg.sudoku_padding_min),
+		"padding-max": strToInt(cfg.sudoku_padding_max),
+		"table-type": cfg.sudoku_table_type,
+		"custom-tables": cfg.sudoku_custom_tables,
+		"handshake-timeout": strToInt(cfg.sudoku_handshake_timeout) ?? null,
+		"enable-pure-downlink": (cfg.sudoku_enable_pure_downlink === '0') ? false : null,
+		"disable-http-mask": (cfg.sudoku_http_mask === '0') ? true : null,
+		"http-mask-mode": cfg.sudoku_http_mask_mode,
+		"path-root": cfg.sudoku_path_root,
+
 		/* Tuic */
 		"congestion-controller": cfg.tuic_congestion_controller,
 		"max-idle-time": durationToSecond(cfg.tuic_max_idle_time),
 		"authentication-timeout": durationToSecond(cfg.tuic_authentication_timeout),
 		"max-udp-relay-packet-size": strToInt(cfg.tuic_max_udp_relay_packet_size),
 
-		/* HTTP / SOCKS / VMess / VLESS / Tuic / Hysteria2 */
-		users: (cfg.type in ['http', 'socks', 'mixed', 'vmess', 'vless']) ? [
-			{
-				/* HTTP / SOCKS */
-				username: cfg.username,
-				password: cfg.password,
+		/* Trojan */
+		"ss-option": cfg.trojan_ss_enabled === '1' ? {
+			enabled: true,
+			method: cfg.trojan_ss_chipher,
+			password: cfg.trojan_ss_password
+		} : null,
 
-				/* VMess / VLESS */
-				uuid: cfg.vmess_uuid,
-				flow: cfg.vless_flow,
-				alterId: strToInt(cfg.vmess_alterid)
-			}
-			/*{
-			}*/
-		] : ((cfg.type in ['tuic', 'hysteria2']) ? {
-			/* Hysteria2 */
-			...arrToObj([[cfg.username, cfg.password]]),
+		/* AnyTLS */
+		"padding-scheme": cfg.anytls_padding_scheme,
 
-			/* Tuic */
-			...arrToObj([[cfg.uuid, cfg.password]])
-		} : null),
+		/* VMess / VLESS */
+		decryption: cfg.vless_decryption === '1' ? parse_vless_encryption(cfg.vless_encryption_hmpayload, 'server') : null,
 
-		/* TLS */
+		/* Plugin fields */
+		...(cfg.plugin ? {
+			// shadow-tls
+			"shadow-tls": cfg.plugin === 'shadow-tls' ? {
+				enable: true,
+				version: strToInt(cfg.plugin_opts_shadowtls_version),
+				...(strToInt(cfg.plugin_opts_shadowtls_version) >= 3 ? {
+					users: [
+						{
+							name: 1,
+							password: cfg.plugin_opts_thetlspassword
+						}
+					],
+				} : { password: cfg.plugin_opts_thetlspassword }),
+				handshake: {
+					dest: cfg.plugin_opts_handshake_dest
+				},
+			} : null
+		} : {}),
+
+		/* Extra fields */
+		udp: strToBool(cfg.udp),
+
+		/* TLS fields */
 		...(cfg.tls === '1' ? {
 			alpn: cfg.tls_alpn,
 			...(cfg.tls_reality === '1' ? {
@@ -106,7 +174,16 @@ uci.foreach(uciconf, uciserver, (cfg) => {
 			} : {
 				certificate: cfg.tls_cert_path,
 				"private-key": cfg.tls_key_path
-			})
+			}),
+			"client-auth-type": cfg.tls_client_auth_type,
+			"client-auth-cert": cfg.tls_client_auth_cert_path,
+			"ech-key": cfg.tls_ech_key,
+		} : {}),
+
+		/* Transport fields */
+		...(cfg.transport_enabled === '1' ? {
+			"grpc-service-name": cfg.transport_grpc_servicename,
+			"ws-path": cfg.transport_path
 		} : {})
 	});
 });

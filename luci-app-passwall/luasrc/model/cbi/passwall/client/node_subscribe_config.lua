@@ -4,28 +4,17 @@ local appname = "passwall"
 
 m = Map(appname)
 m.redirect = api.url("node_subscribe")
+api.set_apply_on_parse(m)
 
 if not arg[1] or not m:get(arg[1]) then
 	luci.http.redirect(m.redirect)
 end
 
-function m.commit_handler(self)
+function m.on_before_save(self)
 	self:del(arg[1], "md5")
 end
 
-if api.is_js_luci() then
-	m.apply_on_parse = false
-	m.on_after_apply = function(self)
-		uci:delete(appname, arg[1], "md5")
-		uci:commit(appname)
-		api.showMsg_Redirect(self.redirect, 3000)
-	end
-end
-
-m.render = function(self, ...)
-	Map.render(self, ...)
-	api.optimize_cbi_ui()
-end
+m:append(Template(appname .. "/cbi/nodes_listvalue_com"))
 
 local has_ss = api.is_finded("ss-redir")
 local has_ss_rust = api.is_finded("sslocal")
@@ -38,6 +27,7 @@ local trojan_type = {}
 local vmess_type = {}
 local vless_type = {}
 local hysteria2_type = {}
+local xray_version = api.get_app_version("xray")
 if has_ss then
 	local s = "shadowsocks-libev"
 	table.insert(ss_type, s)
@@ -64,6 +54,9 @@ if has_xray then
 	table.insert(ss_type, s)
 	table.insert(vmess_type, s)
 	table.insert(vless_type, s)
+	if api.compare_versions(xray_version, ">=", "26.1.13") then
+		table.insert(hysteria2_type, s)
+	end
 end
 if has_hysteria2 then
 	local s = "hysteria2"
@@ -77,7 +70,8 @@ for k, e in ipairs(api.get_valid_nodes()) do
 			remark = e["remark"],
 			type = e["type"],
 			add_mode = e["add_mode"],
-			chain_proxy = e["chain_proxy"]
+			chain_proxy = e["chain_proxy"],
+			group = e["group"]
 		}
 	end
 end
@@ -88,13 +82,53 @@ s.dynamic = false
 
 o = s:option(Value, "remark", translate("Subscribe Remark"))
 o.rmempty = false
+o.validate = function(self, value, section)
+	value = api.trim(value)
+	if value == "" then
+		return nil, translate("Remark cannot be empty.")
+	end
+	local duplicate = false
+	m.uci:foreach(appname, "subscribe_list", function(e)
+		if e[".name"] ~= section and e["remark"] and e["remark"]:lower() == value:lower() then
+			duplicate = true
+			return false
+		end
+	end)
+	if duplicate or value:lower() == "default" then
+		return nil, translate("This remark already exists, please change a new remark.")
+	end
+	return value
+end
+o.write = function(self, section, value)
+	local old = m:get(section, self.option) or ""
+	if old ~= value then
+		m.uci:foreach(appname, "nodes", function(e)
+			if e["group"] and e["group"]:lower() == old:lower() then
+				m.uci:set(appname, e[".name"], "group", value)
+			end
+			if e["protocol"] and (e["protocol"] == "_balancing" or e["protocol"] == "_urltest") and e["node_group"] then
+				local gs = ""
+				for g in e["node_group"]:gmatch("%S+") do
+					if api.UrlEncode(old) == g then
+						gs = gs .. " " .. api.UrlEncode(value)
+					else
+						gs = gs .. " " .. g
+					end
+				end
+				gs = api.trim(gs)
+				m.uci:set(appname, e[".name"], "node_group", gs)
+			end
+		end)
+	end
+	return Value.write(self, section, value)
+end
 
 o = s:option(TextValue, "url", translate("Subscribe URL"))
 o.rows = 5
 o.rmempty = false
 o.validate = function(self, value)
 	if not value or value == "" then
-		return nil, translate("URL cannot be empty")
+		return nil, translate("URL cannot be empty.")
 	end
 	return value:gsub("%s+", ""):gsub("%z", "")
 end
@@ -176,6 +210,9 @@ o:value("prefer_ipv6", translate("Prefer IPv6"))
 o:value("ipv4_only", translate("IPv4 Only"))
 o:value("ipv6_only", translate("IPv6 Only"))
 
+o = s:option(Flag, "boot_update", translate("Update Once on Boot"), translate("Updates the subscription the first time PassWall runs automatically after each system boot."))
+o.default = 0
+
 ---- Enable auto update subscribe
 o = s:option(Flag, "auto_update", translate("Enable auto update subscribe"))
 o.default = 0
@@ -237,22 +274,27 @@ o:value("1", translate("Preproxy Node"))
 o:value("2", translate("Landing Node"))
 
 local descrStr = "Chained proxy works only with Xray or Sing-box nodes.<br>"
-descrStr = descrStr .. "The chained node must be the same type as your subscription node (Xray with Xray, Sing-box with Sing-box).<br>"
 descrStr = descrStr .. "You can only use manual or imported nodes as chained nodes."
 descrStr = translate(descrStr) .. "<br>" .. translate("Only support a layer of proxy.")
 
-o = s:option(ListValue, "preproxy_node", translate("Preproxy Node"))
-o:depends({ ["chain_proxy"] = "1" })
-o.description = descrStr
+o1 = s:option(ListValue, "preproxy_node", translate("Preproxy Node"))
+o1:depends({ ["chain_proxy"] = "1" })
+o1.description = descrStr
+o1.template = appname .. "/cbi/nodes_listvalue"
+o1.group = {}
 
-o = s:option(ListValue, "to_node", translate("Landing Node"))
-o:depends({ ["chain_proxy"] = "2" })
-o.description = descrStr
+o2 = s:option(ListValue, "to_node", translate("Landing Node"))
+o2:depends({ ["chain_proxy"] = "2" })
+o2.description = descrStr
+o2.template = appname .. "/cbi/nodes_listvalue"
+o2.group = {}
 
 for k, v in pairs(nodes_table) do
 	if (v.type == "Xray" or v.type == "sing-box") and (not v.chain_proxy or v.chain_proxy == "") and v.add_mode ~= "2" then
-		s.fields["preproxy_node"]:value(v.id, v.remark)
-		s.fields["to_node"]:value(v.id, v.remark)
+		o1:value(v.id, v.remark)
+		o1.group[#o1.group+1] = (v.group and v.group ~= "") and v.group or translate("default")
+		o2:value(v.id, v.remark)
+		o2.group[#o2.group+1] = (v.group and v.group ~= "") and v.group or translate("default")
 	end
 end
 

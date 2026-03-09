@@ -1,21 +1,12 @@
-# SPDX-License-Identifier: GPL-2.0-only
-#
-# Copyright (C) 2017-2020 Yousong Zhou <yszhou4tech@gmail.com>
-# Copyright (C) 2018 Lean <coolsnowwolf@gmail.com>
-# Copyright (C) 2021 ImmortalWrt.org
-
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=shadowsocksr-libev
-PKG_VERSION:=2.5.8
-PKG_RELEASE:=11
+PKG_VERSION:=2.5.3
+PKG_RELEASE:=1
 
-PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=https://github.com/yuos-bit/shadowsocksr-libev.git
-PKG_SOURCE_DATE:=2018-03-07
-PKG_SOURCE_VERSION:=2d0cd752e6d205347896fb61b6ab6758c613033d
-PKG_MIRROR_HASH:=4745e8a4661898bc2ad0ba49e9560a65baf8abee7cdc7e460fbde9223dd89fb3
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-$(PKG_SOURCE_VERSION).tar.xz
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=https://codeload.github.com/shadowsocksrr/shadowsocksr-libev/tar.gz/$(PKG_VERSION)?
+PKG_HASH:=3fc11a0a132aa6f229285f459e8ce391c20bf86b731b757b0de4dbc96c12301c
 
 PKG_LICENSE:=GPL-3.0
 PKG_LICENSE_FILES:=LICENSE
@@ -34,8 +25,8 @@ define Package/shadowsocksr-libev/Default
     CATEGORY:=Network
     SUBMENU:=Web Servers/Proxies
     TITLE:=shadowsocksr-libev ssr-$(1)
-    URL:=https://github.com/yuos-bit/shadowsocksr-libev
-    DEPENDS:=+libev +libsodium +libopenssl +libpthread +libpcre2 +libudns +zlib
+    URL:=https://github.com/shadowsocksrr/shadowsocksr-libev
+    DEPENDS:=+libev +libsodium +libopenssl +libpthread +libpcre2 +libudns +zlib +libopenssl-legacy
   endef
 
   define Package/shadowsocksr-libev-ssr-$(1)/install
