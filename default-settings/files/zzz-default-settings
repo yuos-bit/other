@@ -56,15 +56,21 @@ uci -q del dhcp.lan.dhcpv6
 uci set dhcp.lan.dns_service='0'
 uci set dhcp.lan.ra_management='1'
 uci -q del dhcp.lan.ra_slaac
+uci set dhcp.lan.start='10'
+uci set dhcp.lan.limit='150'
+uci set dhcp.lan.leasetime='12h'
 #uci set dhcp.@dnsmasq[0].localservice=0
 #uci set dhcp.@dnsmasq[0].nonwildcard=0
 uci commit dhcp
 
+uci set network.wan.ifname='eth0.2'
+uci set network.wan.proto='dhcp'
+
 uci set network.lan.ipaddr='192.168.1.1'
 uci set network.lan.netmask='255.255.255.0'
-uci set network.lan.gateway='192.168.1.1'
-uci set network.lan.dns='223.5.5.5 119.29.29.29 8.8.8.8'
+uci set network.lan.dns='8.8.8.8'
 uci set network.lan.ip6assign='64'
+
 uci commit network
 
 # 禁用SSH开机启动
