@@ -48,6 +48,12 @@ uci set network.lan.dns='8.8.8.8'
 uci set network.lan.ip6assign='64'
 uci commit network
 
+
+# 禁用SSH开机启动
+uci set dropbear.@dropbear[0].enable='0'
+uci commit dropbear
+
+
 ############################################
 # 参考: https://github.com/morrownr/USB-WiFi/discussions/145
 # 解决接口报错不受支持的协议问题
