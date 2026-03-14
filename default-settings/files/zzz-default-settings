@@ -103,16 +103,16 @@ NEW_SSID="ZTE-${MAC_LAST4}"
 ## 一
 #------------------------------------#
 # e8820v2 闭源无线驱动 修改 2.4G
-sed -i 's/^SSID1=.*/SSID1='"${NEW_SSID}-2.4G"'/' /etc/wireless/mt76x2/mt76x2.1.dat
-# sed -i 's/^WPAPSK1=.*/WPAPSK1=1234567890/' /etc/wireless/mt76x2/mt76x2.1.dat
-# sed -i 's/^AuthMode=.*/AuthMode=WPAPSKWPA2PSK/' /etc/wireless/mt76x2/mt76x2.1.dat
-# sed -i 's/^EncrypType=.*/EncrypType=TKIPAES/' /etc/wireless/mt76x2/mt76x2.1.dat
+sed -i 's/^SSID1=.*/SSID1='"${NEW_SSID}-2.4G"'/' /etc/wireless/mt7615/mt7615.1.dat
+# sed -i 's/^WPAPSK1=.*/WPAPSK1=1234567890/' /etc/wireless/mt7615/mt7615.1.dat
+# sed -i 's/^AuthMode=.*/AuthMode=WPAPSKWPA2PSK/' /etc/wireless/mt7615/mt7615.1.dat
+# sed -i 's/^EncrypType=.*/EncrypType=TKIPAES/' /etc/wireless/mt7615/mt7615.1.dat
 
 # e8820v2 闭源无线驱动 修改 5G
-sed -i 's/^SSID1=.*/SSID1='"${NEW_SSID}-5G"'/' /etc/wireless/mt76x2/mt76x2.2.dat
-# sed -i 's/^WPAPSK1=.*/WPAPSK1=1234567890/' /etc/wireless/mt76x2/mt76x2.2.dat
-# sed -i 's/^AuthMode=.*/AuthMode=WPAPSKWPA2PSK/' /etc/wireless/mt76x2/mt76x2.2.dat
-# sed -i 's/^EncrypType=.*/EncrypType=TKIPAES/' /etc/wireless/mt76x2/mt76x2.2.dat
+sed -i 's/^SSID1=.*/SSID1='"${NEW_SSID}-5G"'/' /etc/wireless/mt7615/mt7615.2.dat
+# sed -i 's/^WPAPSK1=.*/WPAPSK1=1234567890/' /etc/wireless/mt7615/mt7615.2.dat
+# sed -i 's/^AuthMode=.*/AuthMode=WPAPSKWPA2PSK/' /etc/wireless/mt7615/mt7615.2.dat
+# sed -i 's/^EncrypType=.*/EncrypType=TKIPAES/' /etc/wireless/mt7615/mt7615.2.dat
 
 # WiFi接口重新生效（闭源驱动方式）
 ifconfig ra0 down
