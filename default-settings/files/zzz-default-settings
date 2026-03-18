@@ -42,7 +42,7 @@ uci commit dhcp
 
 uci set network.wan.ifname='eth0.2'
 uci set network.wan.proto='dhcp'
-uci set network.lan.ipaddr='192.168.1.1'
+uci set network.lan.ipaddr='192.168.89.1'
 uci set network.lan.netmask='255.255.255.0'
 uci set network.lan.dns='8.8.8.8'
 uci set network.lan.ip6assign='64'
