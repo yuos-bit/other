@@ -4,7 +4,7 @@ touch /etc/crontabs/root
 
 uci set luci.main.lang=auto
 #设置默认主题
-uci set luci.main.mediaurlbase=/luci-static/edge2
+uci set luci.main.mediaurlbase=/luci-static/bootstrap
 uci commit luci
 
 uci set system.@system[0].timezone=UTC
@@ -42,7 +42,7 @@ uci commit dhcp
 
 uci set network.wan.ifname='eth0.2'
 uci set network.wan.proto='dhcp'
-uci set network.lan.ipaddr='192.168.89.1'
+uci set network.lan.ipaddr='192.168.0.1'
 uci set network.lan.netmask='255.255.255.0'
 uci set network.lan.dns='8.8.8.8'
 uci set network.lan.ip6assign='64'
