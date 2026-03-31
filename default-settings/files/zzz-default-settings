@@ -50,8 +50,8 @@ uci commit network
 
 
 # 禁用SSH开机启动
-uci set dropbear.@dropbear[0].enable='0'
-uci commit dropbear
+#uci set dropbear.@dropbear[0].enable='0'
+#uci commit dropbear
 
 
 ############################################
@@ -61,10 +61,9 @@ uci set network.lan=interface
 uci set network.lan.ifname='br-lan'
 
 uci set network.wan=interface
-uci set network.wan.ifname='wan'
+uci set network.wan.device='eth0'
 
 uci set network.wan6=interface
-uci set network.wan6.ifname='wan'
 uci set network.wan6.reqaddress='try'
 uci set network.wan6.reqprefix='auto'
 
@@ -113,23 +112,23 @@ NEW_SSID="ZTE"
 ## 一
 #------------------------------------#
 # e8820v2 闭源无线驱动 修改 2.4G
-sed -i 's/^SSID1=.*/SSID1='"${NEW_SSID}-2.4G-${MAC_LAST4}"'/' /etc/wireless/mt7615/mt7615.1.dat
+#sed -i 's/^SSID1=.*/SSID1='"${NEW_SSID}-2.4G-${MAC_LAST4}"'/' /etc/wireless/mt7615/mt7615.1.dat
 # sed -i 's/^WPAPSK1=.*/WPAPSK1=1234567890/' /etc/wireless/mt7615/mt7615.1.dat
 # sed -i 's/^AuthMode=.*/AuthMode=WPAPSKWPA2PSK/' /etc/wireless/mt7615/mt7615.1.dat
 # sed -i 's/^EncrypType=.*/EncrypType=TKIPAES/' /etc/wireless/mt7615/mt7615.1.dat
 
 # e8820v2 闭源无线驱动 修改 5G
-sed -i 's/^SSID1=.*/SSID1='"${NEW_SSID}-5G-${MAC_LAST4}"'/' /etc/wireless/mt7615/mt7615.2.dat
+#sed -i 's/^SSID1=.*/SSID1='"${NEW_SSID}-5G-${MAC_LAST4}"'/' /etc/wireless/mt7615/mt7615.2.dat
 # sed -i 's/^WPAPSK1=.*/WPAPSK1=1234567890/' /etc/wireless/mt7615/mt7615.2.dat
 # sed -i 's/^AuthMode=.*/AuthMode=WPAPSKWPA2PSK/' /etc/wireless/mt7615/mt7615.2.dat
 # sed -i 's/^EncrypType=.*/EncrypType=TKIPAES/' /etc/wireless/mt7615/mt7615.2.dat
 
 # WiFi接口重新生效（闭源驱动方式）
-ifconfig ra0 down
-ifconfig rai0 down
-sleep 2
-ifconfig ra0 up
-ifconfig rai0 up
+#ifconfig ra0 down
+#ifconfig rai0 down
+#sleep 2
+#ifconfig ra0 up
+#ifconfig rai0 up
 #-------------------------------------#
 ## 二
 # 开源驱动
