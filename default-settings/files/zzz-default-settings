@@ -74,6 +74,8 @@ uci set network.wan6.device='br-lan'
 uci set network.wan6.proto='dhcpv6'
 uci set network.wan6.reqaddress='try'
 uci set network.wan6.reqprefix='auto'
+#清除全局网络预设
+uci del network.globals.ula_prefix
 
 # 保存 
 uci commit network
