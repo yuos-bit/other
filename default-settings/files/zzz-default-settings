@@ -49,25 +49,32 @@ uci commit dhcp
 # 参考: https://github.com/morrownr/USB-WiFi/discussions/145
 # 解决接口报错不受支持的协议问题
 
-# 网桥 br-lan
+# 网桥 br-lan 强制绑定 eth0（单网口核心！）
 uci set network.br_lan=device
 uci set network.br_lan.name='br-lan'
 uci set network.br_lan.type='bridge'
-# LAN 配置
+uci add_list network.br_lan.ports='eth0'
+
+# LAN 接口
 uci set network.lan=interface
 uci set network.lan.device='br-lan'
 uci set network.lan.proto='static'
 uci set network.lan.ipaddr='10.32.0.100'
 uci set network.lan.netmask='255.255.255.0'
 uci set network.lan.ip6assign='60'
-# WAN 配置（自动探测网口）
+
+# WAN 接口
 uci set network.wan=interface
+uci set network.wan.device='br-lan'
 uci set network.wan.proto='dhcp'
-# WAN6 配置
+
+#  WAN6 接口
 uci set network.wan6=interface
+uci set network.wan6.device='br-lan'
 uci set network.wan6.proto='dhcpv6'
 uci set network.wan6.reqaddress='try'
 uci set network.wan6.reqprefix='auto'
+
 # 保存 
 uci commit network
 # 设置e8820v2 LED状态灯
