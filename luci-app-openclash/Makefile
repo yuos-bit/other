@@ -7,7 +7,7 @@ PKG_MAINTAINER:=vernesong <https://github.com/vernesong/OpenClash>
 
 # 内核下载配置
 CORE_VER:=1.19.22
-CORE_FILE:=mihomo-linux-amd64-v1-v$(CORE_VER).gz
+CORE_FILE:=mihomo-linux-amd64-v3-v$(CORE_VER).gz
 CORE_URL:=https://github.com/MetaCubeX/mihomo/releases/download/v$(CORE_VER)/$(CORE_FILE)
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
