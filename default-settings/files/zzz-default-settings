@@ -77,6 +77,12 @@ uci set network.wan6.reqprefix='auto'
 #清除全局网络预设
 uci del network.globals.ula_prefix
 
+# 设置IPV6DNS服务器
+uci set network.wan6.defaultroute='0'
+uci set network.wan6.peerdns='0'
+uci add_list network.wan6.dns='240e:9:0:100:202:103:224:68'
+uci add_list network.wan6.dns='240e:9:2000:100:202:103:225:68'
+
 # 保存 
 uci commit network
 # 设置e8820v2 LED状态灯
