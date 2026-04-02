@@ -49,41 +49,80 @@ uci commit dhcp
 # 参考: https://github.com/morrownr/USB-WiFi/discussions/145
 # 解决接口报错不受支持的协议问题
 
-# 网桥 br-lan 强制绑定 eth0（单网口核心！）
+############################################
+# 智能多网口自适应逻辑
+
+# 1. 获取所有物理网口名（按字母顺序排序）
+# 过滤掉虚拟接口、无线接口和回环口
+IF_LIST=$(ls /sys/class/net | grep -E '^eth|^enp|^en' | sort)
+INT_COUNT=$(echo "$IF_LIST" | wc -l)
+
+# 2. 彻底清理旧配置
+uci -q delete network.lan
+uci -q delete network.wan
+uci -q delete network.wan6
+uci -q delete network.br_lan
+
+# 3. 创建 LAN 桥接设备
 uci set network.br_lan=device
 uci set network.br_lan.name='br-lan'
 uci set network.br_lan.type='bridge'
-uci add_list network.br_lan.ports='eth0'
 
-# LAN 接口
+if [ "$INT_COUNT" -eq 1 ]; then
+    # --- 情况 A: 只有 1 个网口 (单臂路由模式) ---
+    SINGLE_IF=$(echo "$IF_LIST" | sed -n '1p')
+    uci add_list network.br_lan.ports="$SINGLE_IF"
+    
+    # WAN/LAN 共用一个物理口
+    WAN_DEV="br-lan"
+    
+elif [ "$INT_COUNT" -ge 2 ]; then
+    # --- 情况 B: 有 2 个及以上网口 ---
+    # 策略：第 1 个口做 LAN, 第 2 个口做 WAN, 第 3+ 个口全部并入 LAN
+    
+    LAN_MAIN=$(echo "$IF_LIST" | sed -n '1p')
+    WAN_DEV=$(echo "$IF_LIST" | sed -n '2p')
+    
+    # 将第 1 个口加入 LAN 桥接
+    uci add_list network.br_lan.ports="$LAN_MAIN"
+    
+    # 处理剩余的网口 (从第 3 个开始)
+    if [ "$INT_COUNT" -gt 2 ]; then
+        OTHERS=$(echo "$IF_LIST" | sed '1,2d')
+        for extra in $OTHERS; do
+            uci add_list network.br_lan.ports="$extra"
+        done
+    fi
+fi
+
+# 4. 应用接口配置
+# LAN 设置
 uci set network.lan=interface
 uci set network.lan.device='br-lan'
 uci set network.lan.proto='static'
-uci set network.lan.ipaddr='10.32.0.100'
+uci set network.lan.ipaddr='192.168.89.1'
 uci set network.lan.netmask='255.255.255.0'
 uci set network.lan.ip6assign='60'
 
-# WAN 接口
+# WAN 设置 (动态绑定 $WAN_DEV)
 uci set network.wan=interface
-uci set network.wan.device='br-lan'
+uci set network.wan.device="$WAN_DEV"
 uci set network.wan.proto='dhcp'
 
-#  WAN6 接口
+# WAN6 设置
 uci set network.wan6=interface
-uci set network.wan6.device='br-lan'
+uci set network.wan6.device="$WAN_DEV"
 uci set network.wan6.proto='dhcpv6'
 uci set network.wan6.reqaddress='try'
 uci set network.wan6.reqprefix='auto'
-#清除全局网络预设
-uci del network.globals.ula_prefix
 
-# 设置IPV6DNS服务器
+# 5. IPv6 及全局微调
+uci -q delete network.globals.ula_prefix
 uci set network.wan6.defaultroute='0'
 uci set network.wan6.peerdns='0'
 uci add_list network.wan6.dns='240e:9:0:100:202:103:224:68'
 uci add_list network.wan6.dns='240e:9:2000:100:202:103:225:68'
 
-# 保存 
 uci commit network
 # 设置e8820v2 LED状态灯
 # uci set system.led_wan
