@@ -223,4 +223,24 @@ echo "log-facility=/dev/null" >> /etc/dnsmasq.conf
 rm -rf /tmp/luci-modulecache/
 rm -f /tmp/luci-indexcache
 
+
+#openclash 关闭小内存模式
+uci -q set openclash.config.small_flash_memory='0'
+uci -q commit openclash
+
+#修复luci-app-homeproxy错误
+# 1. 确保脚本具备执行权限
+chmod +x /etc/homeproxy/scripts/*.sh
+chmod +x /etc/homeproxy/scripts/*.uc
+# 2. 预创建运行目录并修正归属
+mkdir -p /var/run/homeproxy
+mkdir -p /etc/homeproxy/resources
+mkdir -p /etc/homeproxy/ruleset
+# 3. 确保 sing-box 用户存在 (由依赖包创建，此处做二次确认/赋权)
+chown -R sing-box:sing-box /etc/homeproxy
+chown -R sing-box:sing-box /var/run/homeproxy
+# 4. 修正日志文件权限
+touch /var/run/homeproxy/homeproxy.log
+chown sing-box:sing-box /var/run/homeproxy/homeproxy.log
+
 exit 0
