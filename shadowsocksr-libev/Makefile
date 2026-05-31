@@ -7,8 +7,15 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=shadowsocksr-libev
-PKG_VERSION:=2.5.6
-PKG_RELEASE:=12
+PKG_VERSION:=2.5.8
+PKG_RELEASE:=11
+
+PKG_SOURCE_PROTO:=git
+PKG_SOURCE_URL:=https://github.com/yuos-bit/shadowsocksr-libev.git
+PKG_SOURCE_DATE:=2018-03-07
+PKG_SOURCE_VERSION:=2d0cd752e6d205347896fb61b6ab6758c613033d
+PKG_MIRROR_HASH:=4745e8a4661898bc2ad0ba49e9560a65baf8abee7cdc7e460fbde9223dd89fb3
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-$(PKG_SOURCE_VERSION).tar.xz
 
 PKG_LICENSE:=GPL-3.0
 PKG_LICENSE_FILES:=LICENSE
@@ -27,7 +34,7 @@ define Package/shadowsocksr-libev/Default
     CATEGORY:=Network
     SUBMENU:=Web Servers/Proxies
     TITLE:=shadowsocksr-libev ssr-$(1)
-    URL:=https://github.com/shadowsocksrr/shadowsocksr-libev
+    URL:=https://github.com/yuos-bit/shadowsocksr-libev
     DEPENDS:=+libev +libsodium +libopenssl +libpthread +libpcre2 +libudns +zlib
   endef
 
