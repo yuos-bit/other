@@ -280,7 +280,7 @@ function lanip()
 		lan_ip = SYS.exec(string.format("ip address show %s 2>/dev/null | grep -w 'inet' 2>/dev/null | grep -Eo 'inet [0-9\.]+' | awk '{print $2}' | head -1 | tr -d '\n'", lan_int_name))
 	end
 	if not lan_ip or lan_ip == "" then
-		lan_ip = SYS.exec("ip address show $(uci -q -p /tmp/state get network.lan.device || uci -q -p /tmp/state get network.lan.device) | grep -w 'inet'  2>/dev/null | grep -Eo 'inet [0-9\.]+' | awk '{print $2}' | head -1 | tr -d '\n'")
+		lan_ip = SYS.exec("ip address show $(uci -q -p /tmp/state get network.lan.ifname || uci -q -p /tmp/state get network.lan.device) | grep -w 'inet'  2>/dev/null | grep -Eo 'inet [0-9\.]+' | awk '{print $2}' | head -1 | tr -d '\n'")
 	end
 	if not lan_ip or lan_ip == "" then
 		lan_ip = SYS.exec("ip addr show 2>/dev/null | grep -w 'inet' | grep 'global' | grep 'brd' | grep -Eo 'inet [0-9\.]+' | awk '{print $2}' | head -n 1 | tr -d '\n'")
@@ -315,15 +315,12 @@ function get_resourse_mtime(path)
         end
     end
     local file = fs.readlink(real_path) or real_path
-	local resourse_etag_version = SYS.exec(string.format("source /usr/share/openclash/openclash_etag.sh && GET_ETAG_TIMESTAMP_BY_PATH '%s'", real_path))
-    if resourse_etag_version and resourse_etag_version ~= "" then
-		return resourse_etag_version
-	end
-	local resourse_version = os.date("%Y-%m-%d %H:%M:%S", mtime(real_path))
-	if resourse_version and resourse_version ~= "" then
-        return resourse_version
-	end
-    return "Unknown"
+    local model_version = os.date("%Y-%m-%d %H:%M:%S", mtime(real_path))
+    if model_version and model_version ~= "" then
+        return model_version
+    else
+        return "Unknown"
+    end
 end
 
 function uci_get_config(section, key)
