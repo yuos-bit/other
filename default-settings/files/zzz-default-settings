@@ -28,29 +28,35 @@ sed -i 's#downloads.openwrt.org#mirrors.cloud.tencent.com/lede#g' /etc/opkg/dist
 sed -i 's/root::0:0:99999:7:::/root:$1$wEehtjxj$YBu4quNfVUjzfv8p\/PBo5.:0:0:99999:7:::/g' /etc/shadow
 sed -i 's/root:::0:99999:7:::/root:$1$wEehtjxj$YBu4quNfVUjzfv8p\/PBo5.:0:0:99999:7:::/g' /etc/shadow
 
+# 设置DHCP
 uci set dhcp.lan.ra='server'
-uci -q del dhcp.lan.dhcpv6
-uci set dhcp.lan.dns_service='0'
+uci set dhcp.lan.dhcpv6='server'
 uci set dhcp.lan.ra_management='1'
-uci -q del dhcp.lan.ra_slaac
-#uci set dhcp.@dnsmasq[0].localservice=0
-#uci set dhcp.@dnsmasq[0].nonwildcard=0
+uci set dhcp.lan.ra_default='1'
+uci set dhcp.lan.start='2'
+# 设置 IP 地址池起始地址
+uci set dhcp.lan.limit='50'
+# 设置地址池大小
+uci set dhcp.lan.leasetime='24h'
+# 设置租约时间
 uci commit dhcp
+# 保存配置
 
 uci set network.lan.ipaddr='10.32.0.1'
 uci set network.lan.netmask='255.255.255.0'
-uci set network.lan.gateway='10.32.0.1'
+uci del network.lan.gateway              
+# 确保删除 LAN 口网关，防止 DHCP 服务死锁
 uci set network.lan.dns='223.5.5.5 119.29.29.29 8.8.8.8'
 uci set network.lan.ip6assign='64'
+
 uci commit network
 
 ############################################
 # 参考: https://github.com/morrownr/USB-WiFi/discussions/145
 # 解决接口报错不受支持的协议问题
-uci set network.lan
-uci set network.lan.ifname='eth0'
 uci set network.wan
 uci set network.wan.ifname='wan'
+
 uci set network.wan6
 uci set network.wan6.ifname='wan'
 uci set network.wan6.reqaddress='try'
