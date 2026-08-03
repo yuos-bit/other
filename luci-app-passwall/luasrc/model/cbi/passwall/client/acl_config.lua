@@ -1,11 +1,14 @@
 local api = require "luci.passwall.api"
 local appname = "passwall"
 
+api.set_default_cbi()
+
 m = Map(appname)
 m.redirect = api.url("acl")
 api.set_apply_on_parse(m)
 
-if not arg[1] or not m:get(arg[1]) then
+local cfgid = arg[1]
+if not cfgid or not m:get(cfgid) then
 	luci.http.redirect(m.redirect)
 end
 
@@ -67,7 +70,7 @@ local dynamicList_write = function(self, section, value)
 end
 
 -- [[ ACLs Settings ]]--
-s = m:section(NamedSection, arg[1], translate("ACLs"), translate("ACLs"))
+s = m:section(NamedSection, cfgid, translate("ACLs"), translate("ACLs"))
 s.addremove = false
 s.dynamic = false
 
@@ -78,8 +81,21 @@ o.rmempty = false
 
 ---- Remarks
 o = s:option(Value, "remarks", translate("Remarks"))
-o.default = arg[1]
+o.default = cfgid
 o.rmempty = false
+
+---- Log
+o = s:option(Flag, "log", translate("Log"))
+o.default = 0
+o.rmempty = false
+
+o = s:option(ListValue, "loglevel", "Sing-Box/Xray " .. translate("Log Level"))
+o.default = "warning"
+o:value("debug")
+o:value("info")
+o:value("warning")
+o:value("error")
+o:depends("log", "1")
 
 o = s:option(Value, "interface", translate("Source Interface"))
 o:value("", translate("All"))
@@ -236,8 +252,10 @@ o.template = appname .. "/cbi/nodes_listvalue"
 o.group = {"",""}
 o.remove = function(self, section)
 	local v = s.fields["shunt_udp_node"]:formvalue(section)
-	if not v then
+	if not v or v == "close" then
 		return m:del(section, self.option)
+	else
+		return m:set(section, self.option, "tcp")
 	end
 end
 
@@ -370,9 +388,6 @@ o.default = "chinadns-ng"
 o:value("dnsmasq", "Dnsmasq")
 o:value("chinadns-ng", translate("ChinaDNS-NG (recommended)"))
 o:depends({ _tcp_node_bool = "1" })
-
-o = s:option(DummyValue, "view_chinadns_log", " ")
-o.template = appname .. "/acl/view_chinadns_log"
 
 o = s:option(Flag, "filter_proxy_ipv6", translate("Filter Proxy Host IPv6"), translate("Experimental feature."))
 o.default = "0"
@@ -601,4 +616,9 @@ for k, v in pairs(nodes_table) do
 	end
 end
 
-return m
+local footer = Template(appname .. "/acl/config_footer")
+footer.api = api
+footer.cfgid = cfgid
+m:append(footer)
+
+return api.return_map(m)

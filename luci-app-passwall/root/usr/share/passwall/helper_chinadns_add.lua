@@ -17,7 +17,6 @@ local DEFAULT_TAG = var["-DEFAULT_TAG"]
 local NO_LOGIC_LOG = var["-NO_LOGIC_LOG"]
 local TCP_NODE = var["-TCP_NODE"]
 local NFTFLAG = var["-NFTFLAG"]
-local REMOTE_FAKEDNS = var["-REMOTE_FAKEDNS"]
 local FILTER_HTTPS = var["-FILTER_HTTPS"]
 local LOG_FILE = var["-LOG_FILE"]
 
@@ -34,10 +33,6 @@ local config_lines = {}
 local tmp_lines = {}
 local USE_GEOVIEW = uci:get(appname, "@global_rules[0]", "enable_geoview")
 local IS_SHUNT_NODE = uci:get(appname, TCP_NODE, "protocol") == "_shunt"
-
-if IS_SHUNT_NODE then
-	REMOTE_FAKEDNS = uci:get(appname, TCP_NODE, "fakedns") or "0"
-end
 
 local function log(...)
 	if NO_LOGIC_LOG == "1" then
@@ -183,6 +178,10 @@ if not is_file_nonzero(file_vpslist) then
 	uci:foreach(appname, "nodes", function(t)
 		process_address(t.address)
 		process_address(t.download_address)
+		local dns, _ = api.get_domain_port_from_url(t.domain_resolver_dns or t.domain_resolver_dns_https or "")
+		if dns and dns ~= "" then
+			process_address(dns)
+		end
 	end)
 	uci:foreach(appname, "subscribe_list", function(t)  --订阅链接
 		local url, _ = api.get_domain_port_from_url(t.url or "")
@@ -299,7 +298,7 @@ if USE_PROXY_LIST == "1" and is_file_nonzero(file_proxy_host) then
 		"group proxylist",
 		"group-dnl " .. file_proxy_host,
 		"group-upstream " .. DNS_TRUST,
-		REMOTE_FAKEDNS ~= "1" and "group-ipset " .. table.concat(sets, ",") or ""
+		"group-ipset " .. table.concat(sets, ",")
 	}
 	if NO_IPV6_TRUST == "1" then table.insert(tmp_lines, "no-ipv6 tag:proxylist") end
 	insert_array_after(config_lines, tmp_lines, "#--3")
@@ -321,7 +320,7 @@ if GFWLIST == "1" and is_file_nonzero(RULES_PATH .. "/gfwlist") then
 	end
 	tmp_lines = {
 		"gfwlist-file " .. RULES_PATH .. "/gfwlist",
-		REMOTE_FAKEDNS ~= "1" and "add-taggfw-ip " .. table.concat(sets, ",") or ""
+		"add-taggfw-ip " .. table.concat(sets, ",")
 	}
 	if NO_IPV6_TRUST == "1" then table.insert(tmp_lines, "no-ipv6 tag:gfw") end
 	merge_array(config_lines, tmp_lines)
@@ -331,12 +330,16 @@ end
 --中国列表
 if CHNLIST ~= "0" and is_file_nonzero(RULES_PATH .. "/chnlist") then
 	if CHNLIST == "direct" then
+		local sets = {
+			setflag .. "psw_chn",
+			setflag .. "psw_chn6"
+		}
+		local suffix = (NFTFLAG == "1") and "_static" or ""
 		tmp_lines = {
 			"chnlist-file " .. RULES_PATH .. "/chnlist",
-			"ipset-name4 " .. setflag .. "psw_chn",
-			"ipset-name6 " .. setflag .. "psw_chn6",
-			"add-tagchn-ip",
-			"chnlist-first"
+			"ipset-name4 " .. setflag .. "psw_chn" .. suffix,
+			"ipset-name6 " .. setflag .. "psw_chn6" .. suffix,
+			"add-tagchn-ip" .. ((NFTFLAG == "1") and (" " .. table.concat(sets, ",")) or "")
 		}
 		merge_array(config_lines, tmp_lines)
 		log(string.format("  - 中国域名表(chnroute)：%s", DNS_LOCAL or "默认"))
@@ -352,7 +355,7 @@ if CHNLIST ~= "0" and is_file_nonzero(RULES_PATH .. "/chnlist") then
 			"group chn_proxy",
 			"group-dnl " .. RULES_PATH .. "/chnlist",
 			"group-upstream " .. DNS_TRUST,
-			REMOTE_FAKEDNS ~= "1" and "group-ipset " .. table.concat(sets, ",") or ""
+			"group-ipset " .. table.concat(sets, ",")
 		}
 		if NO_IPV6_TRUST == "1" then table.insert(tmp_lines, "no-ipv6 tag:chn_proxy") end
 		insert_array_after(config_lines, tmp_lines, "#--1")
@@ -482,7 +485,7 @@ if IS_SHUNT_NODE then
 			"group shuntlist",
 			"group-dnl " .. file_shunt_host,
 			"group-upstream " .. DNS_TRUST,
-			(not only_global and REMOTE_FAKEDNS == "1") and "" or ("group-ipset " .. table.concat(sets, ","))
+			"group-ipset " .. table.concat(sets, ",")
 		}
 		if NO_IPV6_TRUST == "1" then table.insert(tmp_lines, "no-ipv6 tag:shuntlist") end
 		insert_array_after(config_lines, tmp_lines, "#--2")

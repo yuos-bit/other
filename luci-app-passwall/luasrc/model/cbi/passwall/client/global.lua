@@ -8,6 +8,8 @@ local has_gfwlist = fs.access("/usr/share/passwall/rules/gfwlist")
 local has_chnlist = fs.access("/usr/share/passwall/rules/chnlist")
 local has_chnroute = fs.access("/usr/share/passwall/rules/chnroute")
 
+api.set_default_cbi()
+
 m = Map(appname)
 api.set_apply_on_parse(m)
 
@@ -122,8 +124,10 @@ o.group = {"",""}
 o:depends("_node_sel_other", "1")
 o.remove = function(self, section)
 	local v = s.fields["shunt_udp_node"]:formvalue(section)
-	if not v then
+	if not v or v == "close" then
 		return m:del(section, self.option)
+	else
+		return m:set(section, self.option, "tcp")
 	end
 end
 
@@ -839,4 +843,4 @@ footer.global_cfgid = global_cfgid
 footer.shunt_list = api.jsonc.stringify(shunt_list)
 m:append(footer)
 
-return m
+return api.return_map(m)
