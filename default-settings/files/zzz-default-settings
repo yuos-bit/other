@@ -42,7 +42,7 @@ uci commit dhcp
 
 uci set network.wan.ifname='eth0.2'
 uci set network.wan.proto='dhcp'
-uci set network.lan.ipaddr='192.168.0.1'
+uci set network.lan.ipaddr='192.168.1.1'
 uci set network.lan.netmask='255.255.255.0'
 uci set network.lan.dns='8.8.8.8'
 uci set network.lan.ip6assign='64'
@@ -50,8 +50,8 @@ uci commit network
 
 
 # 禁用SSH开机启动
-uci set dropbear.@dropbear[0].enable='0'
-uci commit dropbear
+# uci set dropbear.@dropbear[0].enable='0'
+# uci commit dropbear
 
 
 ############################################
@@ -85,27 +85,27 @@ uci commit network
 # 若获取失败则使用默认值
 
 # 设置设备型号为系统主机名
-# uci set system.@system[0].hostname="${DEVICE_MODEL}"
-# uci commit system
+uci set system.@system[0].hostname="${DEVICE_MODEL}"
+uci commit system
 
 # 获取 WAN 接口
-WAN_IF=$(ubus call network.interface.wan status 2>/dev/null | jsonfilter -e '@.l3_device')
-
-[ -z "$WAN_IF" ] && WAN_IF=$(uci -q get network.wan.device)
-[ -z "$WAN_IF" ] && WAN_IF=$(uci -q get network.wan.ifname)
-[ -z "$WAN_IF" ] && WAN_IF="eth0"
+# WAN_IF=$(ubus call network.interface.wan status 2>/dev/null | jsonfilter -e '@.l3_device')
+# 
+# [ -z "$WAN_IF" ] && WAN_IF=$(uci -q get network.wan.device)
+# [ -z "$WAN_IF" ] && WAN_IF=$(uci -q get network.wan.ifname)
+# [ -z "$WAN_IF" ] && WAN_IF="eth0"
 
 # 获取 MAC
-MAC=$(cat /sys/class/net/${WAN_IF}/address 2>/dev/null)
-
-if [ -n "$MAC" ]; then
-    MAC_LAST4=$(echo "$MAC" | tr -d ':' | tr 'a-z' 'A-Z' | tail -c 5)
-else
-    MAC_LAST4="8888"
-fi
+# MAC=$(cat /sys/class/net/${WAN_IF}/address 2>/dev/null)
+# 
+# if [ -n "$MAC" ]; then
+#     MAC_LAST4=$(echo "$MAC" | tr -d ':' | tr 'a-z' 'A-Z' | tail -c 5)
+# else
+#     MAC_LAST4="8888"
+# fi
 
 # 生成新的 SSID，格式为“设备型号+_wan口MAC后四位”
-NEW_SSID="ZTE"
+#NEW_SSID="ZTE"
 
 
 
@@ -113,23 +113,23 @@ NEW_SSID="ZTE"
 ## 一
 #------------------------------------#
 # e8820v2 闭源无线驱动 修改 2.4G
-sed -i 's/^SSID1=.*/SSID1='"${NEW_SSID}-2.4G-${MAC_LAST4}"'/' /etc/wireless/mt7615/mt7615.1.dat
+#sed -i 's/^SSID1=.*/SSID1='"${NEW_SSID}-2.4G-${MAC_LAST4}"'/' /etc/wireless/mt7615/mt7615.1.dat
 # sed -i 's/^WPAPSK1=.*/WPAPSK1=1234567890/' /etc/wireless/mt7615/mt7615.1.dat
 # sed -i 's/^AuthMode=.*/AuthMode=WPAPSKWPA2PSK/' /etc/wireless/mt7615/mt7615.1.dat
 # sed -i 's/^EncrypType=.*/EncrypType=TKIPAES/' /etc/wireless/mt7615/mt7615.1.dat
 
 # e8820v2 闭源无线驱动 修改 5G
-sed -i 's/^SSID1=.*/SSID1='"${NEW_SSID}-5G-${MAC_LAST4}"'/' /etc/wireless/mt7615/mt7615.2.dat
+#sed -i 's/^SSID1=.*/SSID1='"${NEW_SSID}-5G-${MAC_LAST4}"'/' /etc/wireless/mt7615/mt7615.2.dat
 # sed -i 's/^WPAPSK1=.*/WPAPSK1=1234567890/' /etc/wireless/mt7615/mt7615.2.dat
 # sed -i 's/^AuthMode=.*/AuthMode=WPAPSKWPA2PSK/' /etc/wireless/mt7615/mt7615.2.dat
 # sed -i 's/^EncrypType=.*/EncrypType=TKIPAES/' /etc/wireless/mt7615/mt7615.2.dat
 
 # WiFi接口重新生效（闭源驱动方式）
-ifconfig ra0 down
-ifconfig rai0 down
-sleep 2
-ifconfig ra0 up
-ifconfig rai0 up
+# ifconfig ra0 down
+# ifconfig rai0 down
+# sleep 2
+# ifconfig ra0 up
+# ifconfig rai0 up
 #-------------------------------------#
 ## 二
 # 开源驱动
