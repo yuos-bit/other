@@ -2,7 +2,7 @@
 
 touch /etc/crontabs/root
 
-uci set luci.main.lang=auto
+uci set luci.main.lang=en
 #设置默认主题
 uci set luci.main.mediaurlbase=/luci-static/bootstrap
 uci commit luci
