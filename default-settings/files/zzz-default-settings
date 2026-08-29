@@ -42,7 +42,7 @@ uci set dhcp.lan.leasetime='24h'
 uci commit dhcp
 # 保存配置
 
-uci set network.lan.ipaddr='10.32.0.1'
+uci set network.lan.ipaddr='172.16.0.1'
 uci set network.lan.netmask='255.255.255.0'
 uci del network.lan.gateway              
 # 确保删除 LAN 口网关，防止 DHCP 服务死锁
