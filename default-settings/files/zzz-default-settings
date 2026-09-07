@@ -147,7 +147,24 @@ NEW_SSID="ZTE"
 # SSID = ZTE-频段-WAN口MAC后四位（MAC后四位取大写）
 uci -q set wireless.default_radio0.ssid="${NEW_SSID}-2.4G-${MAC_LAST4}"
 uci -q set wireless.default_radio1.ssid="${NEW_SSID}-5G-${MAC_LAST4}"
+
+# 修复：mac80211 检测脚本生成的配置存在以下问题
+# 1. radio 默认 disabled=1，导致 wifi 禁用、面板显示未关联
+# 2. radio1(5G) 被误设为 HT20（只有20MHz），radio0(2.4G) 被误设为 VHT80
+# 修正：2.4G 用 HT40（可选20/40MHz），5G 用 VHT80（可选20/40/80MHz，硬件不支持160MHz）
+uci -q set wireless.radio0.disabled=0
+uci -q set wireless.radio1.disabled=0
+uci -q set wireless.radio0.htmode=HT40
+uci -q set wireless.radio1.htmode=VHT80
+uci -q set wireless.radio0.channel=auto
+uci -q set wireless.radio1.channel=auto
+# 保持开放未加密
+uci -q set wireless.default_radio0.encryption=none
+uci -q set wireless.default_radio1.encryption=none
 uci -q commit wireless
+
+# 若无线已启动过则重新加载配置，首次开机时为空操作
+wifi reload 2>/dev/null
 
 
 ################################################
