@@ -42,7 +42,7 @@ uci commit dhcp
 
 uci set network.wan.ifname='eth0.2'
 uci set network.wan.proto='dhcp'
-uci set network.lan.ipaddr='192.168.0.1'
+uci set network.lan.ipaddr='192.168.1.1'
 uci set network.lan.netmask='255.255.255.0'
 uci set network.lan.dns='8.8.8.8'
 uci set network.lan.ip6assign='64'
@@ -71,11 +71,17 @@ uci set network.wan6.reqprefix='auto'
 uci commit network
 
 # 设置e8820v2 LED状态灯
-# uci set system.led_wan
-# uci set system.led_wan.default='1'
-# uci set system.led_wan.dev='wan'
-# uci set system.led_wan.mode='link tx rx'
-# uci set system.led_wan.trigger='netdev'
+uci set system.led_wan
+uci set system.led_wan.default='1'
+uci set system.led_wan.dev='wan'
+uci set system.led_wan.mode='link tx rx'
+uci set system.led_wan.trigger='netdev'
+
+# /etc/config/system
+uci add system led
+uci set system.@led[-1].sysfs='e8820v2:white:power'
+uci set system.@led[-1].trigger='default-on'
+uci commit system
 
 # 动态设置主机名和无线 SSID
 #
@@ -143,11 +149,7 @@ uci -q set wireless.default_radio0.ssid="${NEW_SSID}-2.4G-${MAC_LAST4}"
 uci -q set wireless.default_radio1.ssid="${NEW_SSID}-5G-${MAC_LAST4}"
 uci -q commit wireless
 
-# /etc/config/system
-uci add system led
-uci set system.@led[-1].sysfs='e8820v2:white:power'
-uci set system.@led[-1].trigger='default-on'
-uci commit system
+
 ################################################
 
 # 删除状态页不需显示的
