@@ -167,6 +167,11 @@ uci -q set wireless.radio1.country=US
 # 保持开放未加密
 uci -q set wireless.default_radio0.encryption=none
 uci -q set wireless.default_radio1.encryption=none
+uci del wireless.radio0.txpower
+uci set wireless.radio0.cell_density='0'
+uci del wireless.radio1.txpower
+uci set wireless.radio1.cell_density='0'
+# 无线信道默认
 uci -q commit wireless
 
 # 若无线已启动过则重新加载配置，首次开机时为空操作
