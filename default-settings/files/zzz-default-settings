@@ -4,7 +4,7 @@ touch /etc/crontabs/root
 
 uci set luci.main.lang=auto
 #设置默认主题
-uci set luci.main.mediaurlbase=/luci-static/bootstrap
+uci set luci.main.mediaurlbase=/luci-static/edge2
 uci commit luci
 
 uci set system.@system[0].timezone=UTC
@@ -42,7 +42,7 @@ uci commit dhcp
 
 uci set network.wan.ifname='eth0.2'
 uci set network.wan.proto='dhcp'
-uci set network.lan.ipaddr='192.168.1.1'
+uci set network.lan.ipaddr='172.16.8.1'
 uci set network.lan.netmask='255.255.255.0'
 uci set network.lan.dns='8.8.8.8'
 uci set network.lan.ip6assign='64'
@@ -50,8 +50,8 @@ uci commit network
 
 
 # 禁用SSH开机启动
-uci set dropbear.@dropbear[0].enable='0'
-uci commit dropbear
+# uci set dropbear.@dropbear[0].enable='0'
+# uci commit dropbear
 
 
 ############################################
@@ -69,19 +69,6 @@ uci set network.wan6.reqaddress='try'
 uci set network.wan6.reqprefix='auto'
 
 uci commit network
-
-# 设置e8820v2 LED状态灯
-uci set system.led_wan
-uci set system.led_wan.default='1'
-uci set system.led_wan.dev='wan'
-uci set system.led_wan.mode='link tx rx'
-uci set system.led_wan.trigger='netdev'
-
-# /etc/config/system
-uci add system led
-uci set system.@led[-1].sysfs='e8820v2:white:power'
-uci set system.@led[-1].trigger='default-on'
-uci commit system
 
 # 动态设置主机名和无线 SSID
 #
@@ -111,7 +98,7 @@ else
 fi
 
 # 生成新的 SSID，格式为“设备型号+_wan口MAC后四位”
-NEW_SSID="ZTE"
+NEW_SSID="Xiaomi"
 
 
 
@@ -144,7 +131,7 @@ NEW_SSID="ZTE"
 # wifi up
 
 # 开源驱动 无线SSID设置
-# SSID = ZTE-频段-WAN口MAC后四位（MAC后四位取大写）
+# SSID = Xiaomi-频段-WAN口MAC后四位（MAC后四位取大写）
 uci -q set wireless.default_radio0.ssid="${NEW_SSID}-2.4G-${MAC_LAST4}"
 uci -q set wireless.default_radio1.ssid="${NEW_SSID}-5G-${MAC_LAST4}"
 
@@ -164,9 +151,12 @@ uci -q set wireless.radio1.htmode=VHT80
 uci -q set wireless.radio1.channel=149
 uci -q set wireless.radio0.country=US
 uci -q set wireless.radio1.country=US
-# 保持开放未加密
-uci -q set wireless.default_radio0.encryption=none
-uci -q set wireless.default_radio1.encryption=none
+# 设置wifi名字
+uci set wireless.default_radio0.encryption='sae-mixed'
+uci set wireless.default_radio1.encryption='sae-mixed'
+uci set wireless.default_radio0.key='1234567890'
+uci set wireless.default_radio1.key='1234567890'
+# 设置wifi信道
 uci del wireless.radio0.txpower
 uci set wireless.radio0.cell_density='0'
 uci del wireless.radio1.txpower
